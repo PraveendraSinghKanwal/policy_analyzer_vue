@@ -1,0 +1,92 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+.container {
+  display: flex;
+  height: 100vh;
+}
+.section {
+  flex: 1;
+  padding: 32px 24px;
+  box-sizing: border-box;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.section + .section {
+  border-left: 1px solid #e0e0e0;
+  background: #fafbfc;
+}
+h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #2d3a4a;
+}
+.file-list {
+  margin: 12px 0;
+}
+.file-list select {
+  width: 100%;
+  padding: 8px;
+  font-size: 1rem;
+}
+.actions button, .actions input[type="file"] {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #b0b0b0;
+  background: #f0f4f8;
+  cursor: pointer;
+}
+.actions button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  margin-bottom: 8px;
+}
+.actions button:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+.pdf-viewer, .summary-viewer {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 200px;
+}
+.download-buttons button {
+  margin-right: 12px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: none;
+  background: #43a047;
+  color: #fff;
+  cursor: pointer;
+}
+.download-buttons button:last-child {
+  margin-right: 0;
+}
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+  .section {
+    border-left: none !important;
+    border-top: 1px solid #e0e0e0;
+  }
+  .section:first-child {
+    border-top: none;
+  }
+}
+.status-message {
+  margin-top: 12px;
+  color: #1976d2;
+} 
