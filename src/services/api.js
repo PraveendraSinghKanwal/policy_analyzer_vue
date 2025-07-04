@@ -20,45 +20,58 @@ export async function uploadPdf(file) {
     // Debug: Log all files in the ZIP
     console.log('Files in ZIP:', Object.keys(zip.files));
     
-    let standard = null, gap = null, summary = null;
+    const standardAnalyses = [];
+    const gapAnalyses = [];
+    let summaryFile = null;
+    
     const files = Object.keys(zip.files);
     
     for (const filename of files) {
-      const lowerFilename = filename.toLowerCase();
-      console.log('Processing file:', filename, 'lowercase:', lowerFilename);
-      
-      if (lowerFilename.includes('standard') && (lowerFilename.endsWith('.xlsx') || lowerFilename.endsWith('.xls'))) {
-        standard = await zip.files[filename].async('blob');
-        console.log('Found standard analysis file:', filename);
-      } else if (lowerFilename.includes('gap') && (lowerFilename.endsWith('.xlsx') || lowerFilename.endsWith('.xls'))) {
-        gap = await zip.files[filename].async('blob');
-        console.log('Found gap analysis file:', filename);
-      } else if (lowerFilename.includes('summary') && (lowerFilename.endsWith('.txt') || lowerFilename.endsWith('.text'))) {
-        summary = await zip.files[filename].async('blob');
-        console.log('Found summary file:', filename);
+      const lower = filename.toLowerCase();
+      // Case-insensitive prefix check
+      if (lower.startsWith('standard_analyses') && (lower.endsWith('.xlsx') || lower.endsWith('.xls'))) {
+        const blob = await zip.files[filename].async('blob');
+        standardAnalyses.push({
+          name: filename,
+          blob: blob
+        });
+        console.log('Found Standard Analysis file:', filename);
+      } else if (lower.startsWith('gap_analyses') && (lower.endsWith('.xlsx') || lower.endsWith('.xls'))) {
+        const blob = await zip.files[filename].async('blob');
+        gapAnalyses.push({
+          name: filename,
+          blob: blob
+        });
+        console.log('Found Gap Analysis file:', filename);
+      } else if (lower.includes('summary') && (lower.endsWith('.pdf') || lower.endsWith('.docx'))) {
+        let blob;
+        if (lower.endsWith('.pdf')) {
+          // Set correct MIME type for PDF
+          const arrayBuffer = await zip.files[filename].async('arraybuffer');
+          blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        } else {
+          blob = await zip.files[filename].async('blob');
+        }
+        summaryFile = {
+          name: filename,
+          blob: blob,
+          type: lower.endsWith('.pdf') ? 'pdf' : 'docx'
+        };
+        console.log('Found Summary file:', filename, 'Type:', summaryFile.type);
       }
     }
     
-    // If no files matched by name, try to assign by position/index
-    if (!standard && !gap && !summary && files.length >= 3) {
-      console.log('No files matched by name, trying by position...');
-      const excelFiles = files.filter(f => f.toLowerCase().endsWith('.xlsx') || f.toLowerCase().endsWith('.xls'));
-      const textFiles = files.filter(f => f.toLowerCase().endsWith('.txt') || f.toLowerCase().endsWith('.text'));
-      
-      if (excelFiles.length >= 2) {
-        standard = await zip.files[excelFiles[0]].async('blob');
-        gap = await zip.files[excelFiles[1]].async('blob');
-        console.log('Assigned Excel files by position:', excelFiles[0], excelFiles[1]);
-      }
-      
-      if (textFiles.length >= 1) {
-        summary = await zip.files[textFiles[0]].async('blob');
-        console.log('Assigned text file by position:', textFiles[0]);
-      }
-    }
+    console.log('Final result:', { 
+      standardAnalyses: standardAnalyses.length, 
+      gapAnalyses: gapAnalyses.length, 
+      summaryFile: !!summaryFile 
+    });
     
-    console.log('Final result:', { standard: !!standard, gap: !!gap, summary: !!summary });
-    return { standard, gap, summary };
+    return { 
+      standardAnalyses, 
+      gapAnalyses, 
+      summaryFile 
+    };
   } catch (error) {
     logger.error('API uploadPdf failed', error);
     throw error;

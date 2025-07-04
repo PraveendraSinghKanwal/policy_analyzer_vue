@@ -5,16 +5,19 @@
     </header>
     <div class="container">
       <div class="section left-section">
-        <h2>Upload PDF</h2>
-        <div class="actions">
-          <button :disabled="loading" @click="triggerFile">Upload PDF</button>
+        <div class="actions upload-actions">
+          <button :disabled="loading" @click="triggerFile" class="upload-btn">Upload PDF</button>
+          <StatusMessage v-if="status" :status="status" :error="isError" />
           <input ref="fileInput" type="file" accept="application/pdf" style="display:none" @change="onFileChange" />
         </div>
-        <StatusMessage v-if="status" :status="status" :error="isError" />
-        <ActionButtons
+        <FileButtons
+          v-if="files"
           :enabled="!!files"
-          :active="activeView"
-          @select="setActiveView"
+          :active-file="activeFile"
+          :standard-analyses="files.standardAnalyses"
+          :gap-analyses="files.gapAnalyses"
+          :summary-file="files.summaryFile"
+          @select="setActiveFile"
         />
       </div>
       <div class="section right-section">
@@ -26,18 +29,28 @@
           />
         </div>
         <div class="preview-scroll-container">
-          <div v-if="activeView === 'summary' && summaryText !== null" class="summary-viewer">
-            <strong>Summary</strong>
-            <div class="summary-content">{{ summaryText }}</div>
+          <!-- Excel Preview -->
+          <div v-if="activeFile && (activeFile.type === 'standard' || activeFile.type === 'gap')" class="excel-viewer">
+            <strong>{{ getFileTypeTitle(activeFile.type) }}</strong>
+            <div class="file-name">{{ activeFile.file.name }}</div>
+            <ExcelPreview :excelBlob="activeFile.file.blob" />
           </div>
-          <div v-else-if="activeView === 'standard' && files?.standard" class="excel-viewer">
-            <strong>Standard Analysis</strong>
-            <ExcelPreview :excelBlob="files.standard" />
+          
+          <!-- PDF Preview -->
+          <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type && activeFile.file.type.toLowerCase() === 'pdf'" class="pdf-viewer">
+            <strong>Summary (PDF)</strong>
+            <div class="file-name">{{ activeFile.file.name }}</div>
+            <PdfViewer :key="activeFile.file.name" :pdfBlob="pdfBlobUnwrapped" />
+            <div style="color: green; font-size: 12px;">[PdfViewer rendered]</div>
           </div>
-          <div v-else-if="activeView === 'gap' && files?.gap" class="excel-viewer">
-            <strong>Gap Analysis</strong>
-            <ExcelPreview :excelBlob="files.gap" />
+          
+          <!-- DOCX Preview -->
+          <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type === 'docx'" class="docx-viewer">
+            <strong>Summary (DOCX)</strong>
+            <div class="file-name">{{ activeFile.file.name }}</div>
+            <DocxViewer :docxBlob="activeFile.file.blob" />
           </div>
+          
           <div v-else class="no-file-viewer">
             <div style="color: #888;">No file selected for preview.</div>
           </div>
@@ -49,44 +62,46 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import ActionButtons from '../components/ActionButtons.vue';
+import FileButtons from '../components/FileButtons.vue';
 import DownloadButtons from '../components/DownloadButtons.vue';
 import StatusMessage from '../components/StatusMessage.vue';
 import ExcelPreview from '../components/ExcelPreview.vue';
+import PdfViewer from '../components/PdfViewer.vue';
+import DocxViewer from '../components/DocxViewer.vue';
 import { uploadPdf } from '../services/api.js';
 import logger from '../services/logger.js';
 
-const files = ref(null); // { standard: Blob, gap: Blob, summary: Blob }
-const summaryText = ref(null);
+const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
 const loading = ref(false);
 const status = ref('');
-const activeView = ref('standard');
+const activeFile = ref(null);
 
 const fileInput = ref(null);
 
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
 
-const activeFile = computed(() => {
-  if (!files.value) return null;
-  if (activeView.value === 'standard') return files.value.standard;
-  if (activeView.value === 'gap') return files.value.gap;
-  if (activeView.value === 'summary') return files.value.summary;
-  return null;
+// Unwrap the PDF blob from Vue's proxy if needed
+const pdfBlobUnwrapped = computed(() => {
+  const blob = activeFile.value?.file?.blob;
+  if (blob instanceof Blob) return blob;
+  if (blob && blob.__v_raw) return blob.__v_raw;
+  return blob;
 });
 
-watch([activeView, files], async ([view, f]) => {
-  if (view === 'summary' && f && f.summary) {
-    summaryText.value = await blobToText(f.summary);
-  }
-});
+function getFileTypeTitle(type) {
+  if (type === 'standard') return 'Standard Analysis';
+  if (type === 'gap') return 'Gap Analysis';
+  return 'Summary';
+}
 
-function setActiveView(view) {
-  activeView.value = view;
+function setActiveFile(fileInfo) {
+  activeFile.value = fileInfo;
 }
 
 function triggerFile() {
   fileInput.value.click();
 }
+
 function onFileChange(e) {
   const file = e.target.files[0];
   if (file) handleUpload(file);
@@ -95,13 +110,21 @@ function onFileChange(e) {
 async function handleUpload(file) {
   loading.value = true;
   status.value = 'Uploading...';
+  activeFile.value = null;
+  
   try {
     const result = await uploadPdf(file);
     files.value = result;
-    summaryText.value = null;
-    if (result.summary) {
-      summaryText.value = await blobToText(result.summary);
+    
+    // Auto-select first available file
+    if (result.standardAnalyses.length > 0) {
+      activeFile.value = { type: 'standard', file: result.standardAnalyses[0] };
+    } else if (result.gapAnalyses.length > 0) {
+      activeFile.value = { type: 'gap', file: result.gapAnalyses[0] };
+    } else if (result.summaryFile) {
+      activeFile.value = { type: 'summary', file: result.summaryFile };
     }
+    
     status.value = 'Upload successful!';
     logger.info('Files uploaded', files.value);
   } catch (e) {
@@ -114,22 +137,13 @@ async function handleUpload(file) {
 
 function downloadActive() {
   if (!activeFile.value) return;
-  const url = URL.createObjectURL(activeFile.value);
-  let ext = 'xlsx';
-  if (activeView.value === 'summary') ext = 'txt';
+  
+  const url = URL.createObjectURL(activeFile.value.file.blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${activeView.value}.${ext}`;
+  a.download = activeFile.value.file.name;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-function blobToText(blob) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.readAsText(blob);
-  });
 }
 </script>
 
@@ -167,6 +181,8 @@ function blobToText(blob) {
   width: 100%;
   flex-shrink: 0;
   box-sizing: border-box;
+  padding: 24px;
+  overflow-y: auto;
 }
 
 .right-section {
@@ -175,6 +191,7 @@ function blobToText(blob) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 24px;
 }
 
 .section-header {
@@ -197,16 +214,21 @@ function blobToText(blob) {
   padding-right: 4px;
 }
 
-.summary-content {
-  margin-top: 12px;
-  color: #222;
-  white-space: pre-line;
-  line-height: 1.5;
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 12px;
-  background: #f9f9f9;
-  border-radius: 4px;
+.file-name {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+.excel-viewer,
+.pdf-viewer,
+.docx-viewer {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px;
+  margin-bottom: 16px;
 }
 
 .no-file-viewer {
@@ -219,5 +241,40 @@ function blobToText(blob) {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.actions {
+  margin-bottom: 20px;
+}
+
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-btn {
+  width: 160px;
+  min-width: 120px;
+  max-width: 200px;
+  padding: 12px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin: 0;
+  min-width: 120px;
+  text-align: left;
 }
 </style> 
