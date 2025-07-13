@@ -76,34 +76,54 @@ watch(() => props.excelBlob, async (blob) => {
 
 .table-container {
   overflow-x: auto;
-  max-height: 400px;
   overflow-y: auto;
+  min-height: 120px;
+  max-height: 220px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background: white;
 }
 
 .excel-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .excel-table th,
 .excel-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: 1px solid var(--gray-200);
+  padding: var(--spacing-3);
   text-align: left;
+  vertical-align: top;
 }
 
 .excel-table th {
-  background-color: #f5f5f5;
-  font-weight: bold;
+  background-color: var(--gray-50);
+  font-weight: 600;
+  color: var(--gray-900);
+  border-bottom: 2px solid var(--gray-300);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .excel-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: var(--gray-50);
 }
 
 .excel-table tr:hover {
-  background-color: #f0f0f0;
+  background-color: #eff6ff;
+}
+
+.excel-table td {
+  color: var(--gray-700);
+  font-size: var(--font-size-sm);
 }
 
 .more-rows {
@@ -111,5 +131,20 @@ watch(() => props.excelBlob, async (blob) => {
   padding: 10px;
   color: #666;
   font-style: italic;
+}
+
+.table-container {
+  scrollbar-width: auto;
+}
+.table-container::-webkit-scrollbar {
+  height: 12px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 6px;
+}
+.table-container::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 6px;
 }
 </style> 

@@ -1,28 +1,74 @@
 <template>
-  <div class="section" style="max-width: 400px;">
-    <h2>Upload PDF</h2>
-    <div class="actions">
-      <button :disabled="loading" @click="triggerFile">Upload PDF</button>
-      <input ref="fileInput" type="file" accept="application/pdf" style="display:none" @change="onFileChange" />
-    </div>
-    <StatusMessage :status="status" />
+  <div class="upload-single-btn">
+    <button class="btn-upload-pdf" :disabled="props.loading" @click="triggerFileInput">
+      <img src="/pdf.png" alt="PDF" class="pdf-icon" />
+    </button>
+    <input 
+      ref="fileInput" 
+      type="file" 
+      accept="application/pdf" 
+      style="display: none" 
+      @change="handleFileSelect" 
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import StatusMessage from './StatusMessage.vue';
-
-const emit = defineEmits(['upload']);
-const props = defineProps({ loading: Boolean, status: String });
-
+const props = defineProps({ loading: Boolean });
+const emit = defineEmits(['file-selected']);
 const fileInput = ref(null);
 
-function triggerFile() {
-  fileInput.value.click();
+function triggerFileInput() {
+  fileInput.value?.click();
 }
-function onFileChange(e) {
-  const file = e.target.files[0];
-  if (file) emit('upload', file);
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) {
+    emit('file-selected', { file });
+  }
 }
-</script> 
+</script>
+
+<style scoped>
+.upload-single-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Remove padding-left and padding-top */
+}
+
+.btn-upload-pdf {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  padding: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+.btn-upload-pdf:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pdf-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  margin: 0;
+  display: block;
+}
+</style> 
