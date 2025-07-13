@@ -6,12 +6,16 @@
       <table class="excel-table">
         <thead>
           <tr>
-            <th v-for="(cell, index) in data[0]" :key="index">{{ cell || `Column ${index + 1}` }}</th>
+            <th v-for="(cell, index) in data[0]" :key="index" :style="getColStyle(index)">
+              {{ cell || `Column ${index + 1}` }}
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex">
-            <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell || '' }}</td>
+          <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
+            <td v-for="(cell, cellIndex) in row" :key="cellIndex">
+              {{ cell || '' }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -22,7 +26,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 const props = defineProps({
   excelBlob: Object
@@ -31,11 +35,19 @@ const props = defineProps({
 const data = ref(null);
 const loading = ref(false);
 const error = ref(null);
+const worksheet = ref(null);
+const workbook = ref(null);
+const columnWidths = ref({});
+const rowHeights = ref({});
 
 watch(() => props.excelBlob, async (blob) => {
   if (!blob) {
     data.value = null;
     error.value = null;
+    worksheet.value = null;
+    workbook.value = null;
+    columnWidths.value = {};
+    rowHeights.value = {};
     return;
   }
   
@@ -43,20 +55,58 @@ watch(() => props.excelBlob, async (blob) => {
   error.value = null;
   
   try {
-    const arrayBuffer = await blob.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    
+    workbook.value = new ExcelJS.Workbook();
+    await workbook.value.xlsx.load(blob);
+    worksheet.value = workbook.value.getWorksheet(1);
+    if (!worksheet.value) {
+      throw new Error('No worksheet found in the Excel file');
+    }
+    const jsonData = [];
+    worksheet.value.eachRow((row, rowNumber) => {
+      const rowData = [];
+      row.eachCell((cell, colNumber) => {
+        rowData[colNumber - 1] = cell.value;
+      });
+      jsonData.push(rowData);
+      // Store row height (convert points to px)
+      if (row.height) {
+        rowHeights.value[rowNumber] = row.height * 0.75;
+      }
+    });
+    // Store column widths (convert Excel width to px)
+    worksheet.value.columns.forEach((column, index) => {
+      if (column.width) {
+        const EXCEL_TO_PIXEL = 5;
+        columnWidths.value[index] = column.width * EXCEL_TO_PIXEL;
+      }
+    });
     data.value = jsonData;
   } catch (err) {
-    error.value = 'Failed to parse Excel file';
-    console.error('Excel parsing error:', err);
+    error.value = 'Failed to parse Excel file: ' + err.message;
+    console.error('ExcelJS parsing error:', err);
   } finally {
     loading.value = false;
   }
 }, { immediate: true });
+
+function getColStyle(colIndex) {
+  const style = {};
+  if (columnWidths.value[colIndex]) {
+    style.width = `${columnWidths.value[colIndex]}px`;
+    style.minWidth = `${columnWidths.value[colIndex]}px`;
+    style.maxWidth = `${columnWidths.value[colIndex]}px`;
+  }
+  return style;
+}
+
+function getRowStyle(rowIndex) {
+  const style = {};
+  if (rowHeights.value[rowIndex]) {
+    style.height = `${rowHeights.value[rowIndex]}px`;
+    style.minHeight = `${rowHeights.value[rowIndex]}px`;
+  }
+  return style;
+}
 </script>
 
 <style scoped>
@@ -75,24 +125,37 @@ watch(() => props.excelBlob, async (blob) => {
 }
 
 .table-container {
-  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: scroll !important;
   overflow-y: auto;
   min-height: 120px;
-  max-height: 220px;
-  width: 100%;
+  max-height: 300px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   background: white;
+  border-bottom: 2px solid #eee;
+  position: relative;
+}
+.table-container::after {
+  content: '';
+  display: block;
+  width: 1201px;
+  height: 0;
 }
 
 .excel-table {
-  width: 100%;
+  min-width: 2000px;
+  width: 2000px;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
   background: white;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 11pt;
 }
 
 .excel-table th,
@@ -121,30 +184,27 @@ watch(() => props.excelBlob, async (blob) => {
   background-color: #eff6ff;
 }
 
-.excel-table td {
-  color: var(--gray-700);
-  font-size: var(--font-size-sm);
-}
-
-.more-rows {
-  text-align: center;
-  padding: 10px;
-  color: #666;
-  font-style: italic;
-}
-
 .table-container {
   scrollbar-width: auto;
+  /* Force scrollbar to always show */
+  scrollbar-width: thin;
 }
 .table-container::-webkit-scrollbar {
-  height: 12px;
+  height: 16px;
+  width: 16px;
+  /* Force scrollbar to always show */
+  -webkit-appearance: none;
 }
 .table-container::-webkit-scrollbar-thumb {
-  background: var(--gray-300);
-  border-radius: 6px;
+  background: #888;
+  border-radius: 8px;
+  border: 2px solid #f1f1f1;
 }
 .table-container::-webkit-scrollbar-track {
-  background: var(--gray-100);
-  border-radius: 6px;
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style> 

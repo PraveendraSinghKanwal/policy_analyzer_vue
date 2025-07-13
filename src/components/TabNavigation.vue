@@ -58,12 +58,12 @@ const activeCategory = ref(null);
 const categories = computed(() => [
   {
     id: 'standard',
-    label: 'Standard Analyses',
+    label: 'Content Extraction & Scoring',
     count: props.standardAnalyses?.length || 0
   },
   {
     id: 'gap',
-    label: 'Gap Analyses', 
+    label: 'Gap Analysis', 
     count: props.gapAnalyses?.length || 0
   },
   {

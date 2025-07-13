@@ -10,14 +10,54 @@
       style="display: none" 
       @change="handleFileSelect" 
     />
+    <!-- Upload Status Message -->
+    <div v-if="uploadStatus" class="upload-status">
+      <div class="status-content" :class="statusClass">
+        <span v-if="props.loading" class="spinner"></span>
+        <span class="status-text">{{ uploadStatus }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-const props = defineProps({ loading: Boolean });
+import { ref, computed, watch } from 'vue';
+const props = defineProps({ 
+  loading: Boolean,
+  status: String,
+  error: Boolean
+});
 const emit = defineEmits(['file-selected']);
 const fileInput = ref(null);
+
+const uploadStatus = computed(() => {
+  if (props.loading && props.status) {
+    return props.status;
+  }
+  if (!props.loading && props.status && !props.error) {
+    return props.status;
+  }
+  if (!props.loading && props.status && props.error) {
+    return props.status;
+  }
+  return '';
+});
+
+const statusClass = computed(() => {
+  if (props.loading) return 'status-loading';
+  if (props.error) return 'status-error';
+  return 'status-success';
+});
+
+// Auto-hide success messages after 3 seconds
+watch(() => props.status, (newStatus, oldStatus) => {
+  if (newStatus && !props.loading && !props.error && newStatus !== oldStatus) {
+    setTimeout(() => {
+      // Clear the status by emitting an event to parent
+      emit('clear-status');
+    }, 3000);
+  }
+});
 
 function triggerFileInput() {
   fileInput.value?.click();
@@ -36,7 +76,7 @@ function handleFileSelect(event) {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  /* Remove padding-left and padding-top */
+  gap: 12px;
 }
 
 .btn-upload-pdf {
@@ -70,5 +110,67 @@ function handleFileSelect(event) {
   object-fit: contain;
   margin: 0;
   display: block;
+}
+
+.upload-status {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.status-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid;
+  transition: all 0.3s ease;
+}
+
+.status-loading {
+  background: #f8f9fa;
+  border-left-color: var(--primary-color);
+}
+
+.status-success {
+  background: #f0f9ff;
+  border-left-color: #10b981;
+}
+
+.status-error {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-loading .status-text {
+  color: #333;
+}
+
+.status-success .status-text {
+  color: #065f46;
+}
+
+.status-error .status-text {
+  color: #991b1b;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e3e3e3;
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style> 

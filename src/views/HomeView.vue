@@ -15,11 +15,15 @@
           :status="status"
           :error="isError"
           @file-selected="handleFileSelected"
+          @clear-status="clearStatus"
         />
       </div>
       <div class="action-bar-right">
         <DownloadButtons
-          :enabled="!!activeFile"
+          :enabled="!!files"
+          :standard-analyses="files?.standardAnalyses || []"
+          :gap-analyses="files?.gapAnalyses || []"
+          :summary-file="files?.summaryFile || null"
           @download="downloadActive"
         />
       </div>
@@ -42,12 +46,7 @@
       <!-- Lower Section: File Preview -->
       <div class="lower-section">
         <div class="preview-content">
-          <div class="preview-toggle-bar">
-            <button class="btn btn-secondary" @click="showSpreadsheetViewer = !showSpreadsheetViewer">
-              {{ showSpreadsheetViewer ? 'Show Basic View' : 'Open in Spreadsheet Viewer' }}
-            </button>
-          </div>
-          <div v-if="!showSpreadsheetViewer">
+          <div v-if="activeFile">
             <!-- Basic Solution Preview -->
             <div v-if="activeFile && (activeFile.type === 'standard' || activeFile.type === 'gap')" class="excel-viewer">
               <div class="file-name">{{ activeFile.file.name }}</div>
@@ -67,24 +66,9 @@
             </div>
           </div>
           <div v-else>
-            <div class="luckysheet-iframe-wrapper">
-              <div v-if="iframeLoading && !iframeError" class="iframe-loading">
-                <p>Loading spreadsheet viewer...</p>
-              </div>
-              <iframe
-                ref="lsFrame"
-                src="/luckysheet.html"
-                sandbox="allow-scripts allow-same-origin"
-                style="width:100%;height:400px;border:none;"
-                @load="onIframeLoad"
-                @error="onIframeError"
-              ></iframe>
-              <div v-if="iframeError" class="iframe-error">
-                <p>Failed to load spreadsheet viewer. Please try again.</p>
-                <button class="btn btn-secondary" @click="retryIframeLoad">Retry</button>
-              </div>
+            <div class="no-file-viewer">
+              <div style="color: #888;">No file selected for preview.</div>
             </div>
-            <button class="btn btn-secondary" @click="showSpreadsheetViewer = false">Show Basic View</button>
           </div>
         </div>
       </div>
@@ -93,15 +77,13 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
+import { ref, watch, computed } from 'vue';
 import ExcelPreview from '../components/ExcelPreview.vue';
 import PdfViewer from '../components/PdfViewer.vue';
 import DocxViewer from '../components/DocxViewer.vue';
 import DownloadButtons from '../components/DownloadButtons.vue';
 import UploadSection from '../components/UploadSection.vue';
 import TabNavigation from '../components/TabNavigation.vue';
-import { xlsxToLuckysheet } from '../utils/xlsxToLuckysheet';
-import * as XLSX from 'xlsx';
 import { uploadPdf } from '../services/api.js';
 import logger from '../services/logger.js';
 
@@ -109,11 +91,6 @@ const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile
 const loading = ref(false);
 const status = ref('');
 const activeFile = ref(null);
-const showSpreadsheetViewer = ref(false);
-const luckysheetData = ref(null);
-const lsFrame = ref(null);
-const iframeError = ref(false);
-const iframeLoading = ref(false);
 
 const fileInput = ref(null);
 
@@ -146,151 +123,11 @@ function handleFileSelected(data) {
   }
 }
 
-async function handleShowSpreadsheetViewer() {
-  try {
-    if (!activeFile.value || !activeFile.value.file || !activeFile.value.file.blob) {
-      console.error('No active file or blob available');
-      return;
-    }
-    
-    console.log('Processing file:', activeFile.value.file.name);
-    const arrayBuffer = await activeFile.value.file.blob.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    console.log('Workbook sheets:', workbook.SheetNames);
-    
-    luckysheetData.value = xlsxToLuckysheet(workbook);
-    console.log('Converted luckysheet data:', luckysheetData.value);
-    
-    await nextTick();
-    
-    // Data will be sent when iframe sends 'luckysheet-ready' message
-    // This ensures the iframe is fully loaded before we try to send data
-  } catch (error) {
-    console.error('Error in handleShowSpreadsheetViewer:', error);
-    iframeError.value = true;
-    iframeLoading.value = false;
-  }
-}
 
-watch(showSpreadsheetViewer, (val) => {
-  if (val) {
-    iframeError.value = false;
-    iframeLoading.value = true;
-    handleShowSpreadsheetViewer();
-    
-    // Set a timeout to handle iframe loading issues
-    setTimeout(() => {
-      if (iframeLoading.value) {
-        iframeError.value = true;
-        iframeLoading.value = false;
-      }
-    }, 10000); // 10 second timeout
-  }
-});
-
-// Watch for active file changes to update spreadsheet
-watch(activeFile, (newFile) => {
-  if (newFile && showSpreadsheetViewer.value) {
-    // Update spreadsheet when file changes
-    handleShowSpreadsheetViewer();
-  }
-});
-
-function onIframeLoad() {
-  iframeError.value = false;
-  iframeLoading.value = false;
-}
-
-function onIframeError() {
-  iframeError.value = true;
-  iframeLoading.value = false;
-}
-
-function retryIframeLoad() {
-  iframeError.value = false;
-  iframeLoading.value = true;
-  if (lsFrame.value) {
-    lsFrame.value.src = lsFrame.value.src;
-  }
-}
-
-// Handle messages from iframe
-function handleIframeMessage(event) {
-  console.log('Parent received message:', event.data);
-  if (event.data && event.data.type === 'luckysheet-ready') {
-    console.log('Iframe is ready, sending data:', luckysheetData.value);
-    // Iframe is ready, we can send data
-    if (luckysheetData.value && lsFrame.value && lsFrame.value.contentWindow) {
-      const serializedData = JSON.parse(JSON.stringify(luckysheetData.value));
-      console.log('Sending serialized data:', serializedData);
-      lsFrame.value.contentWindow.postMessage({ luckysheetData: serializedData }, '*');
-    } else {
-      console.error('Missing data or iframe not ready:', {
-        hasData: !!luckysheetData.value,
-        hasFrame: !!lsFrame.value,
-        hasContentWindow: !!(lsFrame.value && lsFrame.value.contentWindow)
-      });
-    }
-  } else if (event.data && event.data.type === 'save-spreadsheet-data') {
-    console.log('Received save request with data:', event.data.data);
-    handleSaveSpreadsheetData(event.data.data);
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('message', handleIframeMessage);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('message', handleIframeMessage);
-});
-
-// Function to handle saving spreadsheet data
-async function handleSaveSpreadsheetData(data) {
-  try {
-    // Convert data back to Excel format
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(data);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    
-    // Generate Excel file
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    
-    // Create download link
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = activeFile.value?.file?.name || 'updated_spreadsheet.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Send success message back to iframe
-    if (lsFrame.value && lsFrame.value.contentWindow) {
-      lsFrame.value.contentWindow.postMessage({ 
-        type: 'save-success',
-        message: 'File saved successfully!' 
-      }, '*');
-    }
-    
-    console.log('Spreadsheet saved successfully');
-  } catch (error) {
-    console.error('Error saving spreadsheet:', error);
-    // Send error message back to iframe
-    if (lsFrame.value && lsFrame.value.contentWindow) {
-      lsFrame.value.contentWindow.postMessage({ 
-        type: 'save-error',
-        message: 'Error saving file: ' + error.message 
-      }, '*');
-    }
-  }
-}
 
 async function handleUpload(file) {
   loading.value = true;
-  status.value = 'Uploading...';
+  status.value = `Uploading ${file.name}!!`;
   activeFile.value = null;
   try {
     const result = await uploadPdf(file);
@@ -302,10 +139,10 @@ async function handleUpload(file) {
     } else if (result.summaryFile) {
       activeFile.value = { type: 'summary', file: result.summaryFile };
     }
-    status.value = 'Upload successful!';
+    status.value = `Successfully uploaded ${file.name}`;
     logger.info('Files uploaded', files.value);
   } catch (e) {
-    status.value = 'Upload failed. Please try again.';
+    status.value = `Upload failed for ${file.name}. Please try again.`;
     logger.error('Upload failed', e);
   } finally {
     loading.value = false;
@@ -313,13 +150,14 @@ async function handleUpload(file) {
 }
 
 function downloadActive() {
-  if (!activeFile.value) return;
-  const url = URL.createObjectURL(activeFile.value.file.blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = activeFile.value.file.name;
-  a.click();
-  URL.revokeObjectURL(url);
+  // This function is now handled by the DownloadButtons component
+  // It's kept for backward compatibility but the actual download logic
+  // is now in the DownloadButtons component
+  console.log('Download requested from parent component');
+}
+
+function clearStatus() {
+  status.value = '';
 }
 </script>
 
@@ -434,22 +272,7 @@ function downloadActive() {
   justify-content: center;
 }
 
-.preview-toggle-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-.spreadsheet-viewer-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
-  background: #f8fafc;
-  border: 1px dashed #bcd;
-  border-radius: 8px;
-  padding: 32px 0;
-}
+
 
 
 .upload-actions {
@@ -483,53 +306,5 @@ function downloadActive() {
   min-width: 120px;
   text-align: left;
 }
-.luckysheet-iframe-wrapper {
-  width: 100%;
-  height: 400px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.04));
-  margin-bottom: 12px;
-  position: relative;
-}
 
-.iframe-error {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-}
-
-.iframe-error p {
-  margin: 0 0 16px 0;
-  color: #666;
-}
-
-.iframe-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-}
-
-.iframe-loading p {
-  margin: 0;
-  color: #666;
-}
 </style> 
