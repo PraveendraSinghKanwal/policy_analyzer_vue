@@ -235,13 +235,13 @@ function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   font-family: Calibri, Arial, sans-serif;
-  font-size: 11pt;
+  font-size: 0.6rem;
 }
 
 .excel-table th,
 .excel-table td {
   border: 1px solid var(--gray-200);
-  padding: var(--spacing-3);
+  padding: var(--spacing-0);
   text-align: left;
   vertical-align: top;
 }
@@ -251,7 +251,7 @@ function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
   /* background-color: var(--gray-50); */
   /* color: var(--gray-900); */
   font-weight: 600;
-  border-bottom: 2px solid var(--gray-300);
+  border-bottom: 1px solid var(--gray-300);
   position: sticky;
   top: 0;
   z-index: 10;

@@ -171,13 +171,13 @@ function getDisplayName(filename, categoryId = null) {
 
 .main-tab {
   flex: 1;
-  padding: var(--spacing-4) var(--spacing-6);
+  padding: var(--spacing-1) var(--spacing-1);
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
   color: var(--gray-600);
   /* font-size: var(--font-size-sm); */
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -233,17 +233,17 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .sub-tab {
-  padding: var(--spacing-2) var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-1);
   background: transparent;
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   color: var(--gray-600);
-  font-size: var(--font-size-sm);
+  font-size: 0.6rem;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: 700;
   position: relative;
 }
 
