@@ -19,18 +19,19 @@
 
     <!-- Sub-tabs for files within the selected category -->
     <div v-if="activeCategory && getCategoryFiles(activeCategory).length > 0" class="sub-tabs">
-      <button
-        v-for="file in getCategoryFiles(activeCategory)"
-        :key="file.name"
-        :class="{ 
-          'sub-tab': true,
-          'active': isFileActive(file, activeCategory)
-        }"
-        @click="selectFile(file, activeCategory)"
-        :disabled="!enabled"
-      >
-        {{ getDisplayName(file.name, activeCategory) }}
-      </button>
+      <template v-for="(file, index) in getCategoryFiles(activeCategory)" :key="file.name">
+        <button
+          :class="{ 
+            'sub-tab': true,
+            'active': isFileActive(file, activeCategory)
+          }"
+          @click="selectFile(file, activeCategory)"
+          :disabled="!enabled"
+        >
+          {{ getDisplayName(file.name, activeCategory) }}
+        </button>
+        <div v-if="index < getCategoryFiles(activeCategory).length - 1" class="sub-tab-divider"></div>
+      </template>
     </div>
 
     <!-- No files message -->
@@ -272,6 +273,15 @@ function getDisplayName(filename, categoryId = null) {
 .sub-tab:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.sub-tab-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--gray-300);
+  margin: 0 var(--spacing-1);
+  align-self: center;
+  flex-shrink: 0;
 }
 
 .no-files-message {
