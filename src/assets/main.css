@@ -127,7 +127,8 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 .btn-success {
-  background: var(--success-color);
+  /* background: var(--success-color); */
+  background: white;
   color: white;
 }
 

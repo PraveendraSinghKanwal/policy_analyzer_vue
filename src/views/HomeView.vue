@@ -49,16 +49,16 @@
           <div v-if="activeFile">
             <!-- Basic Solution Preview -->
             <div v-if="activeFile && (activeFile.type === 'standard' || activeFile.type === 'gap')" class="excel-viewer">
-              <div class="file-name">{{ activeFile.file.name }}</div>
+              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <ExcelPreview :excelBlob="activeFile.file.blob" />
             </div>
             <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type && activeFile.file.type.toLowerCase() === 'pdf'" class="pdf-viewer">
-              <div class="file-name">{{ activeFile.file.name }}</div>
+              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <PdfViewer :key="activeFile.file.name" :pdfBlob="pdfBlobUnwrapped" />
               <div style="color: green; font-size: 12px;">[PdfViewer rendered]</div>
             </div>
             <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type === 'docx'" class="docx-viewer">
-              <div class="file-name">{{ activeFile.file.name }}</div>
+              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <DocxViewer :docxBlob="activeFile.file.blob" />
             </div>
             <div v-else class="no-file-viewer">
@@ -239,14 +239,14 @@ function clearStatus() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 10px;
   overflow: hidden;
 }
 
 .file-name {
   font-size: 12px;
   color: #666;
-  margin-bottom: 12px;
+  margin-bottom: 0px;
   font-style: italic;
 }
 
@@ -256,7 +256,7 @@ function clearStatus() {
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 16px;
+  padding: 5px;
   margin-bottom: 16px;
 }
 

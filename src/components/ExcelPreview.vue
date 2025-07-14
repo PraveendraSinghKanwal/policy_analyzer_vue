@@ -131,7 +131,7 @@ function getRowStyle(rowIndex) {
   overflow-x: scroll !important;
   overflow-y: auto;
   min-height: 120px;
-  max-height: 300px;
+  max-height: 52vh;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   background: white;

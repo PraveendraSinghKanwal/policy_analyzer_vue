@@ -51,12 +51,13 @@
         class="btn btn-success download-btn"
         :class="{ 'btn-disabled': !hasSelectedFiles }"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7,10 12,15 17,10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        <span class="btn-text">Download</span>
+        </svg> -->
+        <img src="/excel-download.jpg" alt="Download" width="32" height="32" data-v-c8beafe0="" />
+        <span class="btn-text"></span>
       </button>
     </div>
 
@@ -303,8 +304,10 @@ async function handleDownload() {
 .download-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  /* gap: 6px; */
+  gap: 0px;
+  /* padding: 8px 16px; */
+  padding: 0px 0px;
   font-size: 13px;
   font-weight: 600;
   border-radius: 6px;

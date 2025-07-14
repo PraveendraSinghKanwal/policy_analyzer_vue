@@ -1,7 +1,7 @@
 <template>
   <div class="upload-single-btn">
     <button class="btn-upload-pdf" :disabled="props.loading" @click="triggerFileInput">
-      <img src="/pdf.png" alt="PDF" class="pdf-icon" />
+      <img src="/pdf_upload.webp" alt="PDF" class="pdf-icon" />
     </button>
     <input 
       ref="fileInput" 
@@ -83,7 +83,7 @@ function handleFileSelect(event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-color);
+  background: white;
   color: white;
   border: none;
   border-radius: var(--radius-md);

@@ -60,7 +60,7 @@ watch(() => props.docxBlob, async (blob) => {
 }
 
 .content-container {
-  max-height: 400px;
+  max-height: 50vh;
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 4px;

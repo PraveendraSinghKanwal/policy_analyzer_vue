@@ -175,7 +175,8 @@ function getDisplayName(filename, categoryId = null) {
   border: none;
   border-bottom: 3px solid transparent;
   color: var(--gray-600);
-  font-size: var(--font-size-sm);
+  /* font-size: var(--font-size-sm); */
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -231,7 +232,7 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .sub-tab {
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-2);
   background: transparent;
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
