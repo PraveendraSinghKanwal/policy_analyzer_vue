@@ -69,12 +69,16 @@ watch(() => props.docxBlob, async (blob) => {
 }
 
 .docx-content {
-  line-height: 1.6;
-  color: #333;
+  font-size: 0.85rem; /* or any size you prefer */
 }
 
 .docx-content :deep(p) {
   margin: 0 0 12px 0;
+  font-size: 0.85rem;
+}
+
+.docx-content :deep(p:first-of-type) {
+  font-size: 0.85rem;
 }
 
 .docx-content :deep(h1),

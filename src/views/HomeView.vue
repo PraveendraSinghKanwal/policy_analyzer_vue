@@ -240,7 +240,7 @@ function clearStatus() {
   display: flex;
   flex-direction: column;
   padding: 10px;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .file-name {

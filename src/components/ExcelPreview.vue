@@ -2,18 +2,19 @@
   <div class="excel-preview">
     <div v-if="loading" class="loading">Loading Excel preview...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="data" class="table-container">
+    <div v-else-if="data && data[0] && data[0].some(cell => cell !== '' && cell != null)" class="table-container">
       <table class="excel-table">
         <thead>
           <tr>
-            <th v-for="(cell, index) in data[0]" :key="index" :style="Object.assign({}, getColStyle(index, 0), getCellContainerStyle(0, index, true))">
-              <span :style="getCellTextStyle(0, index, true)">{{ cell || `Column ${index + 1}` }}</span>
+            <th v-for="(cell, index) in data[0]" :key="index"
+                :style="{ ...getColStyle(index), ...pickHeaderBg(getCellContainerStyle(0, index, true)) }">
+              {{ cell !== undefined && cell !== null && cell !== '' ? (typeof cell === 'object' ? JSON.stringify(cell) : cell) : `Column ${index + 1}` }}
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
-            <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="getCellContainerStyle(rowIndex + 1, cellIndex)">
+            <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="{ ...getCellContainerStyle(rowIndex + 1, cellIndex), ...getColStyle(cellIndex) }">
               <span :style="getCellTextStyle(rowIndex + 1, cellIndex)">{{ cell || '' }}</span>
             </td>
           </tr>
@@ -69,7 +70,8 @@ watch(() => props.excelBlob, async (blob) => {
       const rowData = [];
       const rowStyles = [];
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        rowData[colNumber - 1] = cell.value;
+        // Always convert to string for header row
+        rowData[colNumber - 1] = cell.value != null ? String(cell.value) : '';
         rowStyles[colNumber - 1] = extractCellStyle(cell);
       });
       jsonData.push(rowData);
@@ -81,13 +83,20 @@ watch(() => props.excelBlob, async (blob) => {
     });
     // Store column widths (convert Excel width to px)
     worksheet.value.columns.forEach((column, index) => {
+      let excelWidth = 0;
       if (column.width) {
-        const EXCEL_TO_PIXEL = 5;
-        columnWidths.value[index] = column.width * EXCEL_TO_PIXEL;
+        // px = Math.floor(column.width * 5 + 5) (user's preferred formula)
+        excelWidth = Math.floor(column.width * 5 + 5);
       }
+      // Also consider the width of the header cell content
+      let headerText = jsonData[0]?.[index] || '';
+      let headerTextWidth = measureTextWidth(headerText, '0.6rem Calibri, Arial, sans-serif');
+      // Use the maximum of Excel width and header text width + some padding
+      columnWidths.value[index] = Math.max(excelWidth, headerTextWidth + 24); // 24px padding for cell
     });
     data.value = jsonData;
     cellStyles.value = stylesData;
+    console.log('Extracted data:', data.value);
   } catch (err) {
     error.value = 'Failed to parse Excel file: ' + err.message;
     console.error('ExcelJS parsing error:', err);
@@ -170,122 +179,82 @@ function getCellContainerStyle(rowIndex, colIndex, isHeader = false) {
   const style = cellStyles.value[rowIndex]?.[colIndex] || {};
   // Only use backgroundColor, textAlign, verticalAlign for cell container
   const cellStyle = {};
-  if (style.backgroundColor) cellStyle.backgroundColor = style.backgroundColor;
+  if (style.backgroundColor) cellStyle.backgroundColor = style.backgroundColor + ' !important';
   if (style.textAlign) cellStyle.textAlign = style.textAlign;
   if (style.verticalAlign) cellStyle.verticalAlign = style.verticalAlign;
   return cellStyle;
 }
 function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
   const style = cellStyles.value[rowIndex]?.[colIndex] || {};
-  // Only use text styles for span
+  // Only use text styles for span, but DO NOT apply fontSize
   const textStyle = {};
   if (style.color) textStyle.color = style.color;
   if (style.fontWeight) textStyle.fontWeight = style.fontWeight;
   if (style.fontStyle) textStyle.fontStyle = style.fontStyle;
   if (style.textDecoration) textStyle.textDecoration = style.textDecoration;
-  if (style.fontSize) textStyle.fontSize = style.fontSize;
+  // Do NOT apply fontSize from Excel
   if (style.fontFamily) textStyle.fontFamily = style.fontFamily;
   return textStyle;
 }
+
+// Add a utility to pick only backgroundColor for header
+function pickHeaderBg(cellStyle) {
+  return cellStyle && cellStyle.backgroundColor ? { backgroundColor: cellStyle.backgroundColor } : {};
+}
+
+// Utility to measure text width in px for a given font
+function measureTextWidth(text, font) {
+  if (!measureTextWidth.canvas) {
+    measureTextWidth.canvas = document.createElement('canvas');
+  }
+  const context = measureTextWidth.canvas.getContext('2d');
+  context.font = font;
+  return context.measureText(text).width;
+}
 </script>
 
-<style scoped>
-.excel-preview {
-  width: 100%;
-}
-
-.loading, .error, .no-data {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-}
-
-.error {
-  color: #d32f2f;
-}
-
+<style>
 .table-container {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: scroll !important;
   overflow-y: auto;
-  min-height: 120px;
-  max-height: 60vh;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  background: white;
+  max-height: 62vh;
+  background: #fff;
   border-bottom: 2px solid #eee;
   position: relative;
 }
-.table-container::after {
-  content: '';
-  display: block;
-  width: 1201px;
-  height: 0;
-}
 
 .excel-table {
-  min-width: 2000px;
-  width: 2000px;
+  width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-sm);
-  background: white;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  background: #fff;
   font-family: Calibri, Arial, sans-serif;
-  font-size: 0.6rem;
 }
 
-.excel-table th,
-.excel-table td {
-  border: 1px solid var(--gray-200);
-  padding: var(--spacing-0);
-  text-align: left;
-  vertical-align: top;
-}
-
-/* Remove default background and color for th so dynamic styles show */
 .excel-table th {
-  /* background-color: var(--gray-50); */
-  /* color: var(--gray-900); */
+  border: 1px solid #ccc;
+  padding: 4px 4px;
+  text-align: center;
+  vertical-align: top;
+  font-size: 0.6rem !important;
+  color: #222;
   font-weight: 600;
-  border-bottom: 1px solid var(--gray-300);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 2;
+  height: 25px !important;
+  min-height: 25px !important;
+  max-height: 25px !important;
+  border-bottom: 2px solid #888 !important;
+  background: #f5f5f5 !important;
 }
-
-.excel-table tr:nth-child(even) {
-  background-color: var(--gray-50);
-}
-
-.excel-table tr:hover {
-  background-color: #eff6ff;
-}
-
-.table-container {
-  scrollbar-width: auto;
-  /* Force scrollbar to always show */
-  scrollbar-width: thin;
-}
-.table-container::-webkit-scrollbar {
-  height: 16px;
-  width: 16px;
-  /* Force scrollbar to always show */
-  -webkit-appearance: none;
-}
-.table-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 8px;
-  border: 2px solid #f1f1f1;
-}
-.table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 8px;
-}
-.table-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.excel-table td {
+  border: 1px solid #ccc;
+  padding: 4px 4px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.6rem !important;
+  color: #222;
 }
 </style> 
