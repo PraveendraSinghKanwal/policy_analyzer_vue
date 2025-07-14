@@ -6,15 +6,15 @@
       <table class="excel-table">
         <thead>
           <tr>
-            <th v-for="(cell, index) in data[0]" :key="index" :style="getColStyle(index)">
-              {{ cell || `Column ${index + 1}` }}
+            <th v-for="(cell, index) in data[0]" :key="index" :style="Object.assign({}, getColStyle(index, 0), getCellContainerStyle(0, index, true))">
+              <span :style="getCellTextStyle(0, index, true)">{{ cell || `Column ${index + 1}` }}</span>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
-            <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-              {{ cell || '' }}
+            <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="getCellContainerStyle(rowIndex + 1, cellIndex)">
+              <span :style="getCellTextStyle(rowIndex + 1, cellIndex)">{{ cell || '' }}</span>
             </td>
           </tr>
         </tbody>
@@ -39,6 +39,7 @@ const worksheet = ref(null);
 const workbook = ref(null);
 const columnWidths = ref({});
 const rowHeights = ref({});
+const cellStyles = ref([]); // stores cell styles
 
 watch(() => props.excelBlob, async (blob) => {
   if (!blob) {
@@ -48,6 +49,7 @@ watch(() => props.excelBlob, async (blob) => {
     workbook.value = null;
     columnWidths.value = {};
     rowHeights.value = {};
+    cellStyles.value = [];
     return;
   }
   
@@ -62,12 +64,16 @@ watch(() => props.excelBlob, async (blob) => {
       throw new Error('No worksheet found in the Excel file');
     }
     const jsonData = [];
+    const stylesData = [];
     worksheet.value.eachRow((row, rowNumber) => {
       const rowData = [];
-      row.eachCell((cell, colNumber) => {
+      const rowStyles = [];
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         rowData[colNumber - 1] = cell.value;
+        rowStyles[colNumber - 1] = extractCellStyle(cell);
       });
       jsonData.push(rowData);
+      stylesData.push(rowStyles);
       // Store row height (convert points to px)
       if (row.height) {
         rowHeights.value[rowNumber] = row.height * 0.75;
@@ -81,6 +87,7 @@ watch(() => props.excelBlob, async (blob) => {
       }
     });
     data.value = jsonData;
+    cellStyles.value = stylesData;
   } catch (err) {
     error.value = 'Failed to parse Excel file: ' + err.message;
     console.error('ExcelJS parsing error:', err);
@@ -106,6 +113,79 @@ function getRowStyle(rowIndex) {
     style.minHeight = `${rowHeights.value[rowIndex]}px`;
   }
   return style;
+}
+
+// Extracts style from ExcelJS cell
+function extractCellStyle(cell) {
+  const style = {};
+  // Font color
+  if (cell.font && cell.font.color && cell.font.color.argb) {
+    style.color = argbToHex(cell.font.color.argb);
+  }
+  // Background color (fill)
+  if (cell.fill && cell.fill.fgColor && cell.fill.fgColor.argb) {
+    style.backgroundColor = argbToHex(cell.fill.fgColor.argb);
+  }
+  // Font weight
+  if (cell.font && cell.font.bold) {
+    style.fontWeight = 'bold';
+  }
+  // Italic
+  if (cell.font && cell.font.italic) {
+    style.fontStyle = 'italic';
+  }
+  // Underline
+  if (cell.font && cell.font.underline) {
+    style.textDecoration = 'underline';
+  }
+  // Font size
+  if (cell.font && cell.font.size) {
+    style.fontSize = cell.font.size + 'pt';
+  }
+  // Font family
+  if (cell.font && cell.font.name) {
+    style.fontFamily = cell.font.name;
+  }
+  // Text alignment
+  if (cell.alignment && cell.alignment.horizontal) {
+    style.textAlign = cell.alignment.horizontal;
+  }
+  if (cell.alignment && cell.alignment.vertical) {
+    style.verticalAlign = cell.alignment.vertical;
+  }
+  return style;
+}
+
+// Converts ARGB to HEX
+function argbToHex(argb) {
+  // ARGB is like 'FF00FF00' (AARRGGBB)
+  if (argb.length === 8) {
+    return '#' + argb.slice(2);
+  }
+  return '#000000';
+}
+
+// Split cell style into container (cell) and text styles
+function getCellContainerStyle(rowIndex, colIndex, isHeader = false) {
+  const style = cellStyles.value[rowIndex]?.[colIndex] || {};
+  // Only use backgroundColor, textAlign, verticalAlign for cell container
+  const cellStyle = {};
+  if (style.backgroundColor) cellStyle.backgroundColor = style.backgroundColor;
+  if (style.textAlign) cellStyle.textAlign = style.textAlign;
+  if (style.verticalAlign) cellStyle.verticalAlign = style.verticalAlign;
+  return cellStyle;
+}
+function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
+  const style = cellStyles.value[rowIndex]?.[colIndex] || {};
+  // Only use text styles for span
+  const textStyle = {};
+  if (style.color) textStyle.color = style.color;
+  if (style.fontWeight) textStyle.fontWeight = style.fontWeight;
+  if (style.fontStyle) textStyle.fontStyle = style.fontStyle;
+  if (style.textDecoration) textStyle.textDecoration = style.textDecoration;
+  if (style.fontSize) textStyle.fontSize = style.fontSize;
+  if (style.fontFamily) textStyle.fontFamily = style.fontFamily;
+  return textStyle;
 }
 </script>
 
@@ -166,10 +246,11 @@ function getRowStyle(rowIndex) {
   vertical-align: top;
 }
 
+/* Remove default background and color for th so dynamic styles show */
 .excel-table th {
-  background-color: var(--gray-50);
+  /* background-color: var(--gray-50); */
+  /* color: var(--gray-900); */
   font-weight: 600;
-  color: var(--gray-900);
   border-bottom: 2px solid var(--gray-300);
   position: sticky;
   top: 0;

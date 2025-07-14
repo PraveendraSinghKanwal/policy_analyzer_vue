@@ -1,0 +1,103 @@
+UI Codebase & Application Flow Overview
+======================================
+
+1. Project Structure Overview
+----------------------------
+- src/
+  - main.js: Entry point, mounts the Vue app.
+  - App.vue: Root component, renders HomeView.
+  - views/HomeView.vue: Main application view, orchestrates UI and logic.
+  - components/: Reusable UI components (upload, download, preview, navigation, etc.).
+  - services/: API and logging utilities.
+  - assets/: Global CSS and static assets.
+  - utils/: (Empty, reserved for helper functions).
+
+2. Application Flow
+-------------------
+Startup:
+- main.js imports Vue, the root App.vue, and global CSS, then mounts the app to #app.
+- App.vue simply renders the HomeView component.
+
+Main View (HomeView.vue):
+- Top Bar: Shows the app title and Amex logo.
+- Action Bar:
+  - Left: UploadSection for uploading a PDF.
+  - Right: DownloadButtons for downloading processed files.
+- Main Content:
+  - Tab Navigation: TabNavigation lets users switch between file categories (Content Extraction & Scoring, Gap Analysis, Summary).
+  - File Preview: Shows a preview of the selected file using ExcelPreview, PdfViewer, or DocxViewer.
+
+State Management:
+- files: Holds the processed files returned from the backend (standard analyses, gap analyses, summary).
+- activeFile: The currently selected file for preview.
+- loading, status: For upload progress and messages.
+
+User Actions:
+- Upload: User uploads a PDF via UploadSection.
+  - Triggers handleUpload, which calls uploadPdf (API).
+  - Backend returns a ZIP with processed files, which are parsed and categorized.
+  - The first available file is auto-selected for preview.
+- Tab Navigation: User selects a category/file via TabNavigation.
+  - Updates activeFile for preview.
+- Download: User selects file types and downloads them as a ZIP via DownloadButtons.
+
+3. Key Components
+-----------------
+UploadSection.vue
+- Renders a button to upload a PDF.
+- Handles file input and emits file-selected to parent.
+- Shows upload status (loading, success, error).
+
+DownloadButtons.vue
+- Lets users select which file types to download (standard, gap, summary).
+- Packages selected files into a ZIP using JSZip and triggers download.
+- Shows download status messages.
+
+TabNavigation.vue
+- Renders main category tabs and sub-tabs for files within each category.
+- Handles tab selection and emits events to parent.
+- Shows a message if no files are available in a category.
+
+ExcelPreview.vue, PdfViewer.vue, DocxViewer.vue
+- Render previews for Excel, PDF, and DOCX files, respectively.
+
+4. API & Backend Communication
+-----------------------------
+api.js
+- uploadPdf(file):
+  - Sends the uploaded PDF to /upload-pdf endpoint.
+  - Expects a ZIP file in response.
+  - Uses JSZip to extract files and categorize them:
+    - standardAnalyses: Excel files starting with "standard_analyses".
+    - gapAnalyses: Excel files starting with "gap_analyses".
+    - summaryFile: PDF or DOCX file containing "summary".
+  - Returns an object with these categorized files.
+
+5. Styling & Assets
+-------------------
+- Uses CSS variables for consistent theming.
+- Custom styles for buttons, tabs, status messages, and layout.
+- Assets like logos and icons are stored in /public or /assets.
+
+6. Typical User Flow
+--------------------
+1. User uploads a PDF via the upload button.
+2. App sends the PDF to the backend (/upload-pdf).
+3. Backend processes the PDF and returns a ZIP with categorized files.
+4. App parses the ZIP and updates the UI:
+   - Tabs and sub-tabs are populated.
+   - The first file is auto-selected and previewed.
+5. User navigates between categories/files using tabs.
+6. User can download selected files as a ZIP.
+
+7. Extensibility
+----------------
+- The modular component structure allows for easy addition of new file types, previewers, or categories.
+- API logic is separated, making backend endpoint changes straightforward.
+
+8. Summary Diagram
+------------------
+User Uploads PDF -> UploadSection emits file-selected -> HomeView handleUpload -> api.js uploadPdf -> Backend /upload-pdf -> ZIP with files -> api.js parses ZIP -> HomeView sets files & activeFile -> TabNavigation & Preview update -> User navigates tabs / User downloads files via DownloadButtons
+
+In summary:
+This is a Vue 3 SPA for uploading a policy PDF, processing it on the backend, and letting users preview and download categorized analysis files. The flow is clean, modular, and user-friendly, with clear separation of concerns between UI, logic, and API communication. 
