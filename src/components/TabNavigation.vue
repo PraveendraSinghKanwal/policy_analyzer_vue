@@ -2,19 +2,20 @@
   <div class="tab-navigation">
     <!-- Main Category Tabs -->
     <div class="main-tabs">
-      <button
-        v-for="category in categories"
-        :key="category.id"
-        :class="{ 
-          'main-tab': true,
-          'active': activeCategory === category.id 
-        }"
-        @click="selectCategory(category.id)"
-        :disabled="!enabled"
-      >
-        {{ category.label }}
-        <span v-if="category.count > 0" class="file-count">({{ category.count }})</span>
-      </button>
+      <template v-for="(category, index) in categories" :key="category.id">
+        <button
+          :class="{ 
+            'main-tab': true,
+            'active': activeCategory === category.id 
+          }"
+          @click="selectCategory(category.id)"
+          :disabled="!enabled"
+        >
+          {{ category.label }}
+          <span v-if="category.count > 0" class="file-count">({{ category.count }})</span>
+        </button>
+        <div v-if="index < categories.length - 1" class="main-tab-divider"></div>
+      </template>
     </div>
 
     <!-- Sub-tabs for files within the selected category -->
@@ -221,6 +222,15 @@ function getDisplayName(filename, categoryId = null) {
 .main-tab.active .file-count {
   background: var(--primary-color);
   color: white;
+}
+
+.main-tab-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--gray-300);
+  margin: 0 2px;
+  align-self: center;
+  flex-shrink: 0;
 }
 
 .sub-tabs {

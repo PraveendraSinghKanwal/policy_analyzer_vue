@@ -1,70 +1,46 @@
 <template>
-  <div class="download-section">
-    <!-- Compact Download Interface -->
-    <div class="download-compact" v-if="enabled && hasFiles">
-      <!-- File Type Selectors -->
-      <div class="file-selectors">
-        <label class="selector-item" :class="{ disabled: !hasStandardFiles }">
-          <input 
-            type="checkbox" 
-            v-model="selectedTypes.standard" 
-            :disabled="!hasStandardFiles"
-            class="selector-input"
-          >
-          <span class="selector-label">
-            CE&S
-            <span class="file-count" v-if="standardCount > 0">{{ standardCount }}</span>
-          </span>
-        </label>
-        
-        <label class="selector-item" :class="{ disabled: !hasGapFiles }">
-          <input 
-            type="checkbox" 
-            v-model="selectedTypes.gap" 
-            :disabled="!hasGapFiles"
-            class="selector-input"
-          >
-          <span class="selector-label">
-            Gap
-            <span class="file-count" v-if="gapCount > 0">{{ gapCount }}</span>
-          </span>
-        </label>
-        
-        <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
-          <input 
-            type="checkbox" 
-            v-model="selectedTypes.summary" 
-            :disabled="!hasSummaryFile"
-            class="selector-input"
-          >
-          <span class="selector-label">
-            Summary
-            <span class="file-count" v-if="hasSummaryFile">1</span>
-          </span>
-        </label>
-      </div>
-
-      <!-- Download Button -->
-      <button 
-        :disabled="!enabled || !hasSelectedFiles" 
-        @click="handleDownload"
-        class="btn btn-success download-btn"
-        :class="{ 'btn-disabled': !hasSelectedFiles }"
-      >
-        <!-- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7,10 12,15 17,10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg> -->
-        <img src="/excel-download.jpg" alt="Download" width="32" height="32" data-v-c8beafe0="" />
-        <span class="btn-text"></span>
-      </button>
+  <div class="download-compact" v-if="enabled && hasFiles">
+    <button 
+      :disabled="!enabled || !hasSelectedFiles" 
+      @click="handleDownload"
+      class="btn btn-success download-btn"
+      :class="{ 'btn-disabled': !hasSelectedFiles }"
+    >
+      <img src="/excel-download.jpg" alt="Download"  />
+      <span class="btn-text"></span>
+    </button>
+    <div class="checkbox-col">
+      <label class="selector-item" :class="{ disabled: !hasStandardFiles }">
+        <input 
+          type="checkbox" 
+          v-model="selectedTypes.standard" 
+          :disabled="!hasStandardFiles"
+          class="selector-input"
+        >
+        <span class="selector-label">CE&S <span class="file-count" v-if="standardCount > 0">{{ standardCount }}</span></span>
+      </label>
+      <label class="selector-item" :class="{ disabled: !hasGapFiles }">
+        <input 
+          type="checkbox" 
+          v-model="selectedTypes.gap" 
+          :disabled="!hasGapFiles"
+          class="selector-input"
+        >
+        <span class="selector-label">Gap <span class="file-count" v-if="gapCount > 0">{{ gapCount }}</span></span>
+      </label>
+      <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
+        <input 
+          type="checkbox" 
+          v-model="selectedTypes.summary" 
+          :disabled="!hasSummaryFile"
+          class="selector-input"
+        >
+        <span class="selector-label">Summary <span class="file-count" v-if="hasSummaryFile">1</span></span>
+      </label>
     </div>
-
-    <!-- Download Status -->
-    <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
-      {{ downloadStatus.message }}
-    </div>
+  </div>
+  <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
+    {{ downloadStatus.message }}
   </div>
 </template>
 
@@ -212,42 +188,55 @@ async function handleDownload() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 280px;
+  min-width: 0;
+  align-items: flex-end;
 }
 
 .download-compact {
   display: flex;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 12px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 8px 12px;
-  height: 48px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  height: auto;
+  justify-content: flex-end;
+  min-width: 0;
+  width: auto;
+  margin-left: 0;
 }
 
-.file-selectors {
+.download-btn-col {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  justify-content: flex-end;
+}
+
+.checkbox-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .selector-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 0px 8px;
   border-radius: 4px;
   transition: all 0.2s;
-  font-size: 12px;
+  font-size: 0.6rem;
   font-weight: 500;
   color: #495057;
   background: white;
   border: 1px solid #dee2e6;
   min-width: 60px;
-  justify-content: center;
+  justify-content: flex-end;
   position: relative;
 }
 
@@ -277,6 +266,7 @@ async function handleDownload() {
   gap: 4px;
   transition: all 0.2s;
   white-space: nowrap;
+  font-size: 0.4rem;
 }
 
 .selector-item:has(.selector-input:checked) {
@@ -303,10 +293,8 @@ async function handleDownload() {
 
 .download-btn {
   display: flex;
-  align-items: center;
-  /* gap: 6px; */
+  align-items: flex-start;
   gap: 0px;
-  /* padding: 8px 16px; */
   padding: 0px 0px;
   font-size: 13px;
   font-weight: 600;
@@ -318,8 +306,10 @@ async function handleDownload() {
 }
 
 .download-btn:not(:disabled):hover {
+  /* Remove green background and box-shadow */
+  background: none !important;
+  box-shadow: none !important;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .btn-disabled {
@@ -355,6 +345,13 @@ async function handleDownload() {
   background: #ffebee;
   color: #c62828;
   border: 1px solid #ffcdd2;
+}
+
+.download-btn img[alt="Download"] {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
 }
 
 @media (max-width: 768px) {

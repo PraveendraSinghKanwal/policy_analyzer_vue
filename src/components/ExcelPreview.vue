@@ -211,7 +211,7 @@ function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
   overflow-x: scroll !important;
   overflow-y: auto;
   min-height: 120px;
-  max-height: 52vh;
+  max-height: 60vh;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   background: white;
