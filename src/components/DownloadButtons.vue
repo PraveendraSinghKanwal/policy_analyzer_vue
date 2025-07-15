@@ -217,7 +217,7 @@ async function handleDownload() {
 .checkbox-row {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
   justify-content: flex-start;
 }
@@ -305,7 +305,7 @@ async function handleDownload() {
   font-weight: 600;
   border-radius: 6px;
   transition: all 0.2s;
-  height: 48px;
+  height: 33px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -327,9 +327,9 @@ async function handleDownload() {
 }
 
 .download-status {
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 2px 2px;
+  border-radius: 2px;
+  font-size: 5px;
   font-weight: 500;
   text-align: center;
 }
@@ -353,8 +353,8 @@ async function handleDownload() {
 }
 
 .download-btn img[alt="Download"] {
-  width: 48px;
-  height: 48px;
+  width: 33px;
+  height: 33px;
   object-fit: contain;
   display: block;
 }
