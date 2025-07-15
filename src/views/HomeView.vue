@@ -183,7 +183,7 @@ function clearStatus() {
   align-items: center;
 }
 .main-heading {
-  font-size: calc(var(--font-size-2xl) * 1.04);
+  font-size: calc(var(--font-size-2xl) * 1.5);
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: 1px;
@@ -193,7 +193,7 @@ function clearStatus() {
   align-items: center;
 }
 .amex-logo {
-  height: 36px;
+  height: 60px;
   width: auto;
   object-fit: contain;
 }

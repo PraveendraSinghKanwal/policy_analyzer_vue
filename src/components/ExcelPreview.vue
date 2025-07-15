@@ -252,7 +252,7 @@ function measureTextWidth(text, font) {
 .excel-table td {
   border: 1px solid #ccc;
   padding: 4px 4px;
-  text-align: left;
+  text-align: left !important;
   vertical-align: top;
   font-size: 0.6rem !important;
   color: #222;
