@@ -9,11 +9,13 @@ export async function uploadPdf(file) {
   formData.append('file', file);
 
   console.log('Attempting to upload file:', file.name);
-  console.log('Upload URL:', API_BASE + '/upload-pdf');
+  // console.log('Upload URL:', API_BASE + '/upload-pdf');
+  console.log('Upload URL:', API_BASE + '/api/v1/upload');
   console.log('Backend should be at: http://127.0.0.1:8000');
 
   try {
-    const response = await axios.post(API_BASE + '/upload-pdf', formData, {
+    // const response = await axios.post(API_BASE + '/upload-pdf', formData, {
+    const response = await axios.post(API_BASE + '/api/v1/upload', formData, {
       responseType: 'arraybuffer',
       headers: { 'Content-Type': 'multipart/form-data' },
     });

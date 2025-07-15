@@ -65,7 +65,7 @@ ExcelPreview.vue, PdfViewer.vue, DocxViewer.vue
 -----------------------------
 api.js
 - uploadPdf(file):
-  - Sends the uploaded PDF to /upload-pdf endpoint.
+  - Sends the uploaded PDF to /api/v1/upload endpoint.
   - Expects a ZIP file in response.
   - Uses JSZip to extract files and categorize them:
     - standardAnalyses: Excel files starting with "standard_analyses".
@@ -82,7 +82,7 @@ api.js
 6. Typical User Flow
 --------------------
 1. User uploads a PDF via the upload button.
-2. App sends the PDF to the backend (/upload-pdf).
+2. App sends the PDF to the backend (/api/v1/upload).
 3. Backend processes the PDF and returns a ZIP with categorized files.
 4. App parses the ZIP and updates the UI:
    - Tabs and sub-tabs are populated.
@@ -97,7 +97,7 @@ api.js
 
 8. Summary Diagram
 ------------------
-User Uploads PDF -> UploadSection emits file-selected -> HomeView handleUpload -> api.js uploadPdf -> Backend /upload-pdf -> ZIP with files -> api.js parses ZIP -> HomeView sets files & activeFile -> TabNavigation & Preview update -> User navigates tabs / User downloads files via DownloadButtons
+User Uploads PDF -> UploadSection emits file-selected -> HomeView handleUpload -> api.js uploadPdf -> Backend /api/v1/upload -> ZIP with files -> api.js parses ZIP -> HomeView sets files & activeFile -> TabNavigation & Preview update -> User navigates tabs / User downloads files via DownloadButtons
 
 In summary:
 This is a Vue 3 SPA for uploading a policy PDF, processing it on the backend, and letting users preview and download categorized analysis files. The flow is clean, modular, and user-friendly, with clear separation of concerns between UI, logic, and API communication. 

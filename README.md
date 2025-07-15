@@ -24,7 +24,7 @@ This is a production-ready single-page application (SPA) built with Vue 3 and Vi
    ```
 
 ## API
-- Expects a backend endpoint `/upload-pdf` as described in the API documentation.
+- Expects a backend endpoint `/api/v1/upload` as described in the API documentation.
 
 ## Project Structure
 - `src/components/` — UI components

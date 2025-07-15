@@ -1,46 +1,52 @@
 <template>
-  <div class="download-compact" v-if="enabled && hasFiles">
-    <div class="checkbox-row">
-      <label class="selector-item" :class="{ disabled: !hasStandardFiles }">
-        <input 
-          type="checkbox" 
-          v-model="selectedTypes.standard" 
-          :disabled="!hasStandardFiles"
-          class="selector-input"
+  <div class="download-row-group">
+    <div class="download-compact" v-if="enabled && hasFiles">
+      <div class="checkbox-row">
+        <label class="selector-item" :class="{ disabled: !hasStandardFiles }">
+          <input 
+            type="checkbox" 
+            v-model="selectedTypes.standard" 
+            :disabled="!hasStandardFiles"
+            class="selector-input"
+          >
+          <span class="selector-label">CE&S </span> 
+        </label>
+        <label class="selector-item" :class="{ disabled: !hasGapFiles }">
+          <input 
+            type="checkbox" 
+            v-model="selectedTypes.gap" 
+            :disabled="!hasGapFiles"
+            class="selector-input"
+          >
+          <span class="selector-label">Gap</span>
+        </label>
+        <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
+          <input 
+            type="checkbox" 
+            v-model="selectedTypes.summary" 
+            :disabled="!hasSummaryFile"
+            class="selector-input"
+          >
+          <span class="selector-label">Summary</span>
+        </label>
+      </div>
+      <div class="download-btn-col">
+        <button 
+          :disabled="!enabled || !hasSelectedFiles" 
+          @click="handleDownload"
+          class="btn btn-success download-btn"
+          :class="{ 'btn-disabled': !hasSelectedFiles }"
         >
-        <span class="selector-label">CE&S </span> 
-      </label>
-      <label class="selector-item" :class="{ disabled: !hasGapFiles }">
-        <input 
-          type="checkbox" 
-          v-model="selectedTypes.gap" 
-          :disabled="!hasGapFiles"
-          class="selector-input"
-        >
-        <span class="selector-label">Gap</span>
-      </label>
-      <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
-        <input 
-          type="checkbox" 
-          v-model="selectedTypes.summary" 
-          :disabled="!hasSummaryFile"
-          class="selector-input"
-        >
-        <span class="selector-label">Summary</span>
-      </label>
+          <img src="/excel-download.jpg" alt="Download"  />
+          <span class="btn-text"></span>
+        </button>
+      </div>
     </div>
-    <button 
-      :disabled="!enabled || !hasSelectedFiles" 
-      @click="handleDownload"
-      class="btn btn-success download-btn"
-      :class="{ 'btn-disabled': !hasSelectedFiles }"
-    >
-      <img src="/excel-download.jpg" alt="Download"  />
-      <span class="btn-text"></span>
-    </button>
-  </div>
-  <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
-    {{ downloadStatus.message }}
+    <div class="download-status-row">
+      <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
+        {{ downloadStatus.message }}
+      </div>
+    </div>
   </div>
 </template>
 
@@ -157,7 +163,7 @@ async function handleDownload() {
     
     downloadStatus.value = { 
       type: 'success', 
-      message: `Successfully downloaded ${fileCount} file${fileCount !== 1 ? 's' : ''}!` 
+      message: `Downloaded ${fileCount} file${fileCount !== 1 ? 's' : ''}!` 
     };
     
     // Clear status after 3 seconds
@@ -207,9 +213,9 @@ async function handleDownload() {
   width: auto;
   margin-left: 0;
 }
-
 .download-btn-col {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: flex-end;
 }
@@ -357,6 +363,19 @@ async function handleDownload() {
   height: 33px;
   object-fit: contain;
   display: block;
+}
+
+.download-row-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.download-status-row {
+  width: 100%;
+  min-height: 22px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
 }
 
 @media (max-width: 768px) {
