@@ -9,16 +9,14 @@
       </div>
     </div>
     <div class="action-bar">
-      <div class="action-bar-left">
-        <UploadSection
-          :loading="loading"
-          :status="status"
-          :error="isError"
-          @file-selected="handleFileSelected"
-          @clear-status="clearStatus"
-        />
-      </div>
-      <div class="action-bar-right">
+      <UploadSection
+        :loading="loading"
+        :status="status"
+        :error="isError"
+        @file-selected="handleFileSelected"
+        @clear-status="clearStatus"
+      />
+      <div class="action-bar-right-group">
         <DownloadButtons
           :enabled="!!files"
           :standard-analyses="files?.standardAnalyses || []"
@@ -199,21 +197,22 @@ function clearStatus() {
 }
 .action-bar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-6);
+  align-items: flex-end;
+  gap: 24px;
   padding: var(--spacing-2) var(--spacing-8) var(--spacing-2) var(--spacing-8);
   background: #fafbfc;
   border-bottom: 1px solid var(--gray-200);
+  min-height: 60px;
+  box-sizing: border-box;
 }
-.action-bar-left {
+.action-bar-right-group {
   display: flex;
-  align-items: center;
-}
-.action-bar-right {
-  display: flex;
-  align-items: center;
+  align-items: flex-end;
   margin-left: auto;
+}
+/* Remove .action-bar-left and .action-bar-right if not used */
+.action-bar-left, .action-bar-right {
+  display: none;
 }
 .main-scrollable {
   flex: 1;

@@ -1,15 +1,6 @@
 <template>
   <div class="download-compact" v-if="enabled && hasFiles">
-    <button 
-      :disabled="!enabled || !hasSelectedFiles" 
-      @click="handleDownload"
-      class="btn btn-success download-btn"
-      :class="{ 'btn-disabled': !hasSelectedFiles }"
-    >
-      <img src="/excel-download.jpg" alt="Download"  />
-      <span class="btn-text"></span>
-    </button>
-    <div class="checkbox-col">
+    <div class="checkbox-row">
       <label class="selector-item" :class="{ disabled: !hasStandardFiles }">
         <input 
           type="checkbox" 
@@ -17,7 +8,6 @@
           :disabled="!hasStandardFiles"
           class="selector-input"
         >
-        <!-- <span class="selector-label">CE&S <span class="file-count" v-if="standardCount > 0">{{ standardCount }}</span></span> -->
         <span class="selector-label">CE&S </span> 
       </label>
       <label class="selector-item" :class="{ disabled: !hasGapFiles }">
@@ -27,7 +17,6 @@
           :disabled="!hasGapFiles"
           class="selector-input"
         >
-        <!--<span class="selector-label">Gap <span class="file-count" v-if="gapCount > 0">{{ gapCount }}</span></span> -->
         <span class="selector-label">Gap</span>
       </label>
       <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
@@ -37,10 +26,18 @@
           :disabled="!hasSummaryFile"
           class="selector-input"
         >
-        <!-- <span class="selector-label">Summary <span class="file-count" v-if="hasSummaryFile">1</span></span> -->
         <span class="selector-label">Summary</span>
       </label>
     </div>
+    <button 
+      :disabled="!enabled || !hasSelectedFiles" 
+      @click="handleDownload"
+      class="btn btn-success download-btn"
+      :class="{ 'btn-disabled': !hasSelectedFiles }"
+    >
+      <img src="/excel-download.jpg" alt="Download"  />
+      <span class="btn-text"></span>
+    </button>
   </div>
   <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
     {{ downloadStatus.message }}
@@ -198,8 +195,8 @@ async function handleDownload() {
 .download-compact {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 0px;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
@@ -217,12 +214,17 @@ async function handleDownload() {
   justify-content: flex-end;
 }
 
-.checkbox-col {
+.checkbox-row {
   display: flex;
-  flex-direction: column;
-  gap: 0px;
-  align-items: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
   justify-content: flex-start;
+}
+
+/* Remove or override checkbox-col if not used anymore */
+.checkbox-col {
+  display: none;
 }
 
 .selector-item {
@@ -230,7 +232,7 @@ async function handleDownload() {
   align-items: center;
   gap: 0px;
   cursor: pointer;
-  padding: 0px 8px;
+  padding: 2px 2px;
   border-radius: 4px;
   transition: all 0.2s;
   font-size: 0.6rem;
@@ -238,7 +240,7 @@ async function handleDownload() {
   color: #495057;
   background: white;
   border: 1px solid #dee2e6;
-  min-width: 60px;
+  /* min-width: 60px; */
   justify-content: flex-end;
   position: relative;
 }
@@ -303,7 +305,7 @@ async function handleDownload() {
   font-weight: 600;
   border-radius: 6px;
   transition: all 0.2s;
-  height: 32px;
+  height: 48px;
   white-space: nowrap;
   flex-shrink: 0;
 }
