@@ -151,7 +151,6 @@ function downloadActive() {
   // This function is now handled by the DownloadButtons component
   // It's kept for backward compatibility but the actual download logic
   // is now in the DownloadButtons component
-  console.log('Download requested from parent component');
 }
 
 function clearStatus() {
