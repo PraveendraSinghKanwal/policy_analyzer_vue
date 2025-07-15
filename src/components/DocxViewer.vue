@@ -69,16 +69,16 @@ watch(() => props.docxBlob, async (blob) => {
 }
 
 .docx-content {
-  font-size: 0.85rem; /* or any size you prefer */
+  font-size: 0.7rem; /* updated from 0.85rem */
 }
 
 .docx-content :deep(p) {
   margin: 0 0 12px 0;
-  font-size: 0.85rem;
+  font-size: 0.7rem; /* updated from 0.85rem */
 }
 
 .docx-content :deep(p:first-of-type) {
-  font-size: 0.85rem;
+  font-size: 0.7rem; /* updated from 0.85rem */
 }
 
 .docx-content :deep(h1),
@@ -89,6 +89,7 @@ watch(() => props.docxBlob, async (blob) => {
 .docx-content :deep(h6) {
   margin: 16px 0 8px 0;
   font-weight: 600;
+  font-size: 0.8rem; /* updated from inherit to 1rem */
 }
 
 .docx-content :deep(ul),
