@@ -12,7 +12,7 @@
           :disabled="!enabled"
         >
           {{ category.label }}
-          <span v-if="category.count > 0" class="file-count">({{ category.count }})</span>
+          <span v-if="category.count > 0" class="file-count">{{ category.count }}</span>
         </button>
         <div v-if="index < categories.length - 1" class="main-tab-divider"></div>
       </template>

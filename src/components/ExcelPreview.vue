@@ -238,7 +238,7 @@ function measureTextWidth(text, font) {
   text-align: center;
   vertical-align: top;
   font-size: 0.6rem !important;
-  color: #222;
+  color: #fff;
   font-weight: 600;
   position: sticky;
   top: 0;

@@ -17,7 +17,8 @@
           :disabled="!hasStandardFiles"
           class="selector-input"
         >
-        <span class="selector-label">CE&S <span class="file-count" v-if="standardCount > 0">{{ standardCount }}</span></span>
+        <!-- <span class="selector-label">CE&S <span class="file-count" v-if="standardCount > 0">{{ standardCount }}</span></span> -->
+        <span class="selector-label">CE&S </span> 
       </label>
       <label class="selector-item" :class="{ disabled: !hasGapFiles }">
         <input 
@@ -26,7 +27,8 @@
           :disabled="!hasGapFiles"
           class="selector-input"
         >
-        <span class="selector-label">Gap <span class="file-count" v-if="gapCount > 0">{{ gapCount }}</span></span>
+        <!--<span class="selector-label">Gap <span class="file-count" v-if="gapCount > 0">{{ gapCount }}</span></span> -->
+        <span class="selector-label">Gap</span>
       </label>
       <label class="selector-item" :class="{ disabled: !hasSummaryFile }">
         <input 
@@ -35,7 +37,8 @@
           :disabled="!hasSummaryFile"
           class="selector-input"
         >
-        <span class="selector-label">Summary <span class="file-count" v-if="hasSummaryFile">1</span></span>
+        <!-- <span class="selector-label">Summary <span class="file-count" v-if="hasSummaryFile">1</span></span> -->
+        <span class="selector-label">Summary</span>
       </label>
     </div>
   </div>
