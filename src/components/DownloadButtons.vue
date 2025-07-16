@@ -372,7 +372,7 @@ async function handleDownload() {
 }
 .download-status-row {
   width: 100%;
-  min-height: 22px;
+  min-height: 0px;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
