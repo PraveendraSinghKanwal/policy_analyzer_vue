@@ -96,7 +96,6 @@ watch(() => props.excelBlob, async (blob) => {
     });
     data.value = jsonData;
     cellStyles.value = stylesData;
-    console.log('Extracted data:', data.value);
   } catch (err) {
     error.value = 'Failed to parse Excel file: ' + err.message;
     console.error('ExcelJS parsing error:', err);

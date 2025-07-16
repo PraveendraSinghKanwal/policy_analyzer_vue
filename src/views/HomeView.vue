@@ -169,7 +169,6 @@ function downloadActive() {
   // This function is now handled by the DownloadButtons component
   // It's kept for backward compatibility but the actual download logic
   // is now in the DownloadButtons component
-  console.log('Download requested from parent component');
 }
 
 function clearStatus() {
@@ -183,6 +182,7 @@ function clearStatus() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #E8F0F9;
 }
 .top-bar {
   display: flex;
@@ -218,7 +218,7 @@ function clearStatus() {
   align-items: flex-end;
   gap: 24px;
   padding: var(--spacing-2) var(--spacing-8) var(--spacing-2) var(--spacing-8);
-  background: #fafbfc;
+  background: #E8F0F9;
   border-bottom: 1px solid var(--gray-200);
   min-height: 60px;
   box-sizing: border-box;
@@ -242,6 +242,10 @@ function clearStatus() {
 }
 .upper-section {
   flex-shrink: 0;
+  background: #E8F0F9;
+}
+.tab-section {
+  background: #E8F0F9;
 }
 .lower-section {
   flex: 1;
@@ -249,7 +253,7 @@ function clearStatus() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #f5f5f5;
+  background: #E8F0F9;
 }
 .preview-content {
   flex: 1;
@@ -258,6 +262,7 @@ function clearStatus() {
   flex-direction: column;
   padding: 10px;
   /* overflow: hidden; */
+  background: #E8F0F9;
 }
 
 .file-name {

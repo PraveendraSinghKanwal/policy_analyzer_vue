@@ -27,7 +27,7 @@ const props = defineProps({
   status: String,
   error: Boolean
 });
-const emit = defineEmits(['file-selected']);
+const emit = defineEmits(['file-selected', 'clear-status']);
 const fileInput = ref(null);
 
 const uploadStatus = computed(() => {
