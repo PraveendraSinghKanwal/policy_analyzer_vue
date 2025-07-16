@@ -277,7 +277,7 @@ async function handleDownload() {
   gap: 4px;
   transition: all 0.2s;
   white-space: nowrap;
-  font-size: 0.4rem;
+  font-size: 0.5rem;
 }
 
 .selector-item:has(.selector-input:checked) {
@@ -304,7 +304,7 @@ async function handleDownload() {
 
 .download-btn {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 0px;
   padding: 0px 0px;
   font-size: 13px;
@@ -359,8 +359,8 @@ async function handleDownload() {
 }
 
 .download-btn img[alt="Download"] {
-  width: 33px;
-  height: 33px;
+  width: 28px;
+  height: 26px;
   object-fit: contain;
   display: block;
 }

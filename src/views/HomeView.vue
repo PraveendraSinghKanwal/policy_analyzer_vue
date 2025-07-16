@@ -64,7 +64,8 @@
             </div>
           </div>
           <div v-else>
-            <div class="no-file-viewer">
+            <ExcelPreview v-if="defaultExcelBlob" :excelBlob="defaultExcelBlob" />
+            <div v-else class="no-file-viewer">
               <div style="color: #888;">No file selected for preview.</div>
             </div>
           </div>
@@ -75,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import ExcelPreview from '../components/ExcelPreview.vue';
 import PdfViewer from '../components/PdfViewer.vue';
 import DocxViewer from '../components/DocxViewer.vue';
@@ -99,6 +100,22 @@ const pdfBlobUnwrapped = computed(() => {
   if (blob instanceof Blob) return blob;
   if (blob && blob.__v_raw) return blob.__v_raw;
   return blob;
+});
+
+const defaultExcelBlob = ref(null);
+
+onMounted(async () => {
+  // Only fetch the template if no file is selected
+  if (!activeFile.value) {
+    try {
+      const response = await fetch('/Template.xlsx');
+      if (!response.ok) throw new Error('Failed to fetch default template');
+      const blob = await response.blob();
+      defaultExcelBlob.value = blob;
+    } catch (e) {
+      console.error('Could not load default template:', e);
+    }
+  }
 });
 
 function getFileTypeTitle(type) {
@@ -125,7 +142,8 @@ function handleFileSelected(data) {
 
 async function handleUpload(file) {
   loading.value = true;
-  status.value = `Uploading ${file.name}!!`;
+  // status.value = `Uploading ${file.name}!!`;
+  status.value = `Processing Policy...`;
   activeFile.value = null;
   try {
     const result = await uploadPdf(file);
@@ -137,7 +155,7 @@ async function handleUpload(file) {
     } else if (result.summaryFile) {
       activeFile.value = { type: 'summary', file: result.summaryFile };
     }
-    status.value = `Successfully uploaded ${file.name}`;
+    status.value = `Successfully processed ${file.name}`;
     logger.info('Files uploaded', files.value);
   } catch (e) {
     status.value = `Upload failed for ${file.name}. Please try again.`;
