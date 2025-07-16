@@ -142,7 +142,8 @@ function handleFileSelected(data) {
 
 async function handleUpload(file) {
   loading.value = true;
-  status.value = `Uploading ${file.name}!!`;
+  // status.value = `Uploading ${file.name}!!`;
+  status.value = `Processing Policy...`;
   activeFile.value = null;
   try {
     const result = await uploadPdf(file);
