@@ -165,7 +165,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .main-tabs {
   display: flex;
-  background: white;
+  background: #E8F0F9;
   border-bottom: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
 }
@@ -235,7 +235,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .sub-tabs {
   display: flex;
-  background: var(--gray-50);
+  background: #E8F0F9;
   border-bottom: 1px solid var(--gray-200);
   overflow-x: auto;
   padding: 0 var(--spacing-4);
