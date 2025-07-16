@@ -155,7 +155,7 @@ async function handleUpload(file) {
     } else if (result.summaryFile) {
       activeFile.value = { type: 'summary', file: result.summaryFile };
     }
-    status.value = `Successfully uploaded ${file.name}`;
+    status.value = `Successfully processed ${file.name}`;
     logger.info('Files uploaded', files.value);
   } catch (e) {
     status.value = `Upload failed for ${file.name}. Please try again.`;
