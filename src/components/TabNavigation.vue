@@ -173,7 +173,7 @@ function getDisplayName(filename, categoryId = null) {
 .main-tab {
   flex: 1;
   padding: var(--spacing-1) var(--spacing-1);
-  background: transparent;
+  background: white; /* Force white background for all main tabs */
   border: none;
   border-bottom: 3px solid transparent;
   color: var(--gray-600);
@@ -192,7 +192,7 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .main-tab:hover:not(:disabled) {
-  background: var(--gray-50);
+  background: #f5f5f5;
   color: var(--primary-color);
 }
 
@@ -235,7 +235,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .sub-tabs {
   display: flex;
-  background: var(--gray-50);
+  background: white; /* Force white background for sub-tab bar */
   border-bottom: 1px solid var(--gray-200);
   overflow-x: auto;
   padding: 0 var(--spacing-4);
@@ -244,7 +244,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .sub-tab {
   padding: var(--spacing-1) var(--spacing-1);
-  background: transparent;
+  background: white; /* Force white background for all sub-tabs */
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   color: var(--gray-600);
@@ -258,7 +258,7 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .sub-tab:hover:not(:disabled) {
-  background: white;
+  background: #f5f5f5;
   color: var(--primary-color);
   box-shadow: var(--shadow-sm);
 }
