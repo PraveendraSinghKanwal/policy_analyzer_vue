@@ -36,6 +36,7 @@
             :active-file="activeFile"
             :gap-analyses="files.gapAnalyses"
             :summary-files="files.summaryFiles"
+            :total-score="files.totalScore"
             @select-file="setActiveFile"
           />
         </div>

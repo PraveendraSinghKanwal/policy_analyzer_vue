@@ -12,7 +12,7 @@
           :disabled="!enabled"
         >
           {{ category.label }}
-          <span v-if="category.count > 0" class="file-count">{{ category.count }}</span>
+          <span v-if="category.id === 'gap' && totalScore !== undefined" class="score-badge">({{ totalScore }})</span>
         </button>
         <div v-if="index < categories.length - 1" class="main-tab-divider"></div>
       </template>
@@ -30,6 +30,7 @@
           :disabled="!enabled"
         >
           {{ getDisplayName(file.name, activeCategory) }}
+          <span v-if="file.score !== undefined" class="score-badge">({{ file.score }})</span>
         </button>
         <div v-if="index < getCategoryFiles(activeCategory).length - 1" class="sub-tab-divider"></div>
       </template>
@@ -49,7 +50,8 @@ const props = defineProps({
   enabled: Boolean,
   activeFile: Object,
   gapAnalyses: Array,
-  summaryFiles: Array
+  summaryFiles: Array,
+  totalScore: Number
 });
 
 const emit = defineEmits(['select-category', 'select-file']);
@@ -60,12 +62,12 @@ const categories = computed(() => [
   {
     id: 'gap',
     label: 'Content Extraction and Scoring and Gap Analysis',
-    count: props.gapAnalyses?.length || 0
+    // Show no count here, score will be shown in template
   },
   {
     id: 'summary',
     label: 'Gap Summary',
-    count: props.summaryFiles?.length || 0
+    // No count for summary tab
   }
 ]);
 
@@ -300,5 +302,12 @@ function getDisplayName(filename, categoryId = null) {
 
 .sub-tabs::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+.score-badge {
+  margin-left: 6px;
+  color: #1976d2;
+  font-weight: 700;
+  font-size: 0.7em;
 }
 </style> 
