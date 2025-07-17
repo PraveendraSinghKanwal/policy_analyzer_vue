@@ -19,9 +19,8 @@
       <div class="action-bar-right-group">
         <DownloadButtons
           :enabled="!!files"
-          :standard-analyses="files?.standardAnalyses || []"
           :gap-analyses="files?.gapAnalyses || []"
-          :summary-file="files?.summaryFile || null"
+          :summary-files="files?.summaryFiles || []"
           @download="downloadActive"
         />
       </div>
@@ -147,6 +146,7 @@ async function handleUpload(file) {
   try {
     const result = await uploadPdf(file);
     files.value = result;
+    // console.log('files.summaryFiles in HomeView.vue:', files.value.summaryFiles);
     console.log('gapAnalyses:', files.value.gapAnalyses);
     console.log('summaryFiles:', files.value.summaryFiles);
     if (Array.isArray(result.gapAnalyses) && result.gapAnalyses.length > 0) {

@@ -65,6 +65,9 @@ export async function uploadPdf(file) {
       }
     }
 
+    // console.log('gapAnalyses:', gapAnalyses);
+    // console.log('summaryFiles:', summaryFiles);
+
     return {
       gapAnalyses,
       summaryFiles,
