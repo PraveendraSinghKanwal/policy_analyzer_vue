@@ -4,6 +4,13 @@ import logger from './logger.js';
 
 const API_BASE = '';
 
+/**
+ * Uploads a PDF file to the backend and parses the returned zip structure.
+ * Expects a zip with two subfolders:
+ *   - 'Analysis': files for the first tab
+ *   - 'Summary': files for the second tab
+ * Returns: { gapAnalyses: [...], summaryFiles: [...] }
+ */
 export async function uploadPdf(file) {
   const formData = new FormData();
   formData.append('file', file);
@@ -16,52 +23,41 @@ export async function uploadPdf(file) {
 
     // Parse ZIP
     const zip = await JSZip.loadAsync(response.data);
-    
-    const standardAnalyses = [];
+
     const gapAnalyses = [];
-    let summaryFile = null;
-    
+    const summaryFiles = [];
+
+    // Loop through all files in the zip
     const files = Object.keys(zip.files);
-    
+    console.log('All files in zip:', files);
+    files.forEach(f => console.log('Zip file path:', f));
     for (const filename of files) {
+      // Only process files (not folders)
+      if (zip.files[filename].dir) continue;
       const lower = filename.toLowerCase();
-      // Case-insensitive prefix check
-      if (lower.startsWith('standard_analyses') && (lower.endsWith('.xlsx') || lower.endsWith('.xls'))) {
-        const blob = await zip.files[filename].async('blob');
-        standardAnalyses.push({
-          name: filename,
-          blob: blob
-        });
-      } else if (lower.startsWith('gap_analyses') && (lower.endsWith('.xlsx') || lower.endsWith('.xls'))) {
+      if (lower.startsWith('analysis/')) {
+        // File for the first tab
         const blob = await zip.files[filename].async('blob');
         gapAnalyses.push({
-          name: filename,
+          name: filename.split('/').pop(),
           blob: blob
         });
-      } else if (lower.includes('summary') && (lower.endsWith('.pdf') || lower.endsWith('.docx'))) {
-        let blob;
-        if (lower.endsWith('.pdf')) {
-          // Set correct MIME type for PDF
-          const arrayBuffer = await zip.files[filename].async('arraybuffer');
-          blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-        } else {
-          blob = await zip.files[filename].async('blob');
-        }
-        summaryFile = {
-          name: filename,
-          blob: blob,
-          type: lower.endsWith('.pdf') ? 'pdf' : 'docx'
-        };
+      } else if (lower.startsWith('summary/')) {
+        // File for the second tab
+        const blob = await zip.files[filename].async('blob');
+        summaryFiles.push({
+          name: filename.split('/').pop(),
+          blob: blob
+        });
       }
     }
-    
-    return { 
-      standardAnalyses, 
-      gapAnalyses, 
-      summaryFile 
+
+    return {
+      gapAnalyses,
+      summaryFiles
     };
   } catch (error) {
-    logger.error('API uploadPdf failed', error);
+    logger.error('Upload failed', error);
     throw error;
   }
 } 

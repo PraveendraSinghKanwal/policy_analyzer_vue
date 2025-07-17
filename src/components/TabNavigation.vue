@@ -48,9 +48,8 @@ import { computed, ref, watch } from 'vue';
 const props = defineProps({
   enabled: Boolean,
   activeFile: Object,
-  standardAnalyses: Array,
   gapAnalyses: Array,
-  summaryFile: Object
+  summaryFiles: Array
 });
 
 const emit = defineEmits(['select-category', 'select-file']);
@@ -59,30 +58,23 @@ const activeCategory = ref(null);
 
 const categories = computed(() => [
   {
-    id: 'standard',
-    label: 'Content Extraction & Scoring',
-    count: props.standardAnalyses?.length || 0
-  },
-  {
     id: 'gap',
-    label: 'Gap Analysis', 
+    label: 'Content Extraction and Scoring and Gap Analysis',
     count: props.gapAnalyses?.length || 0
   },
   {
     id: 'summary',
-    label: 'Summary',
-    count: props.summaryFile ? 1 : 0
+    label: 'Gap Summary',
+    count: props.summaryFiles?.length || 0
   }
 ]);
 
 function getCategoryFiles(categoryId) {
   switch (categoryId) {
-    case 'standard':
-      return props.standardAnalyses || [];
     case 'gap':
       return props.gapAnalyses || [];
     case 'summary':
-      return props.summaryFile ? [props.summaryFile] : [];
+      return props.summaryFiles || [];
     default:
       return [];
   }
@@ -111,20 +103,14 @@ function selectCategory(categoryId) {
 }
 
 // Auto-select first category with files when component mounts
-watch(() => props.standardAnalyses, (newVal) => {
-  if (newVal && newVal.length > 0 && !activeCategory.value) {
-    selectCategory('standard');
-  }
-}, { immediate: true });
-
 watch(() => props.gapAnalyses, (newVal) => {
   if (newVal && newVal.length > 0 && !activeCategory.value) {
     selectCategory('gap');
   }
 }, { immediate: true });
 
-watch(() => props.summaryFile, (newVal) => {
-  if (newVal && !activeCategory.value) {
+watch(() => props.summaryFiles, (newVal) => {
+  if (newVal && newVal.length > 0 && !activeCategory.value) {
     selectCategory('summary');
   }
 }, { immediate: true });
@@ -137,12 +123,7 @@ function getDisplayName(filename, categoryId = null) {
   // Remove the prefix and extension for display
   let displayName = filename;
 
-  if (categoryId === 'gap') {
-    // Remove 'Gap Analyses' (case-insensitive) from anywhere in the filename
-    displayName = displayName.replace(/gap[_\s-]*analyses[_\s-]*/i, '');
-  } else if (filename.startsWith('Standard_Analyses_')) {
-    displayName = filename.replace('Standard_Analyses_', '');
-  } else if (filename.startsWith('Gap_analyses_')) {
+  if (filename.startsWith('Gap_analyses_')) {
     displayName = filename.replace('Gap_analyses_', '');
   }
 

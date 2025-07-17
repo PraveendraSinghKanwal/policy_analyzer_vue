@@ -34,9 +34,8 @@
             v-if="files"
             :enabled="!!files"
             :active-file="activeFile"
-            :standard-analyses="files.standardAnalyses"
             :gap-analyses="files.gapAnalyses"
-            :summary-file="files.summaryFile"
+            :summary-files="files.summaryFiles"
             @select-file="setActiveFile"
           />
         </div>
@@ -46,16 +45,16 @@
         <div class="preview-content">
           <div v-if="activeFile">
             <!-- Basic Solution Preview -->
-            <div v-if="activeFile && (activeFile.type === 'standard' || activeFile.type === 'gap')" class="excel-viewer">
+            <div v-if="activeFile.type === 'gap'" class="excel-viewer">
               <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <ExcelPreview :excelBlob="activeFile.file.blob" />
             </div>
-            <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type && activeFile.file.type.toLowerCase() === 'pdf'" class="pdf-viewer">
+            <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
               <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
-              <PdfViewer :key="activeFile.file.name" :pdfBlob="pdfBlobUnwrapped" />
+              <PdfViewer :pdfBlob="activeFile.file.blob" />
               <div style="color: green; font-size: 12px;">[PdfViewer rendered]</div>
             </div>
-            <div v-else-if="activeFile && activeFile.type === 'summary' && activeFile.file.type === 'docx'" class="docx-viewer">
+            <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
               <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <DocxViewer :docxBlob="activeFile.file.blob" />
             </div>
@@ -142,18 +141,17 @@ function handleFileSelected(data) {
 
 async function handleUpload(file) {
   loading.value = true;
-  // status.value = `Uploading ${file.name}!!`;
   status.value = `Processing Policy...`;
   activeFile.value = null;
   try {
     const result = await uploadPdf(file);
     files.value = result;
-    if (result.standardAnalyses.length > 0) {
-      activeFile.value = { type: 'standard', file: result.standardAnalyses[0] };
-    } else if (result.gapAnalyses.length > 0) {
+    console.log('gapAnalyses:', files.value.gapAnalyses);
+    console.log('summaryFiles:', files.value.summaryFiles);
+    if (Array.isArray(result.gapAnalyses) && result.gapAnalyses.length > 0) {
       activeFile.value = { type: 'gap', file: result.gapAnalyses[0] };
-    } else if (result.summaryFile) {
-      activeFile.value = { type: 'summary', file: result.summaryFile };
+    } else if (Array.isArray(result.summaryFiles) && result.summaryFiles.length > 0) {
+      activeFile.value = { type: 'summary', file: result.summaryFiles[0] };
     }
     status.value = `Successfully processed ${file.name}`;
     logger.info('Files uploaded', files.value);
