@@ -9,13 +9,7 @@
       </div>
     </div>
     <div class="action-bar">
-      <UploadSection
-        :loading="loading"
-        :status="status"
-        :error="isError"
-        @file-selected="handleFileSelected"
-        @clear-status="clearStatus"
-      />
+      <!-- UploadSection removed -->
       <div class="action-bar-right-group">
         <DownloadButtons
           :enabled="!!files"
@@ -25,12 +19,11 @@
         />
       </div>
     </div>
-    <div class="main-scrollable">
+    <div class="main-scrollable" v-if="files">
       <!-- Upper Section: Tab Navigation -->
       <div class="upper-section">
         <div class="tab-section">
           <TabNavigation
-            v-if="files"
             :enabled="!!files"
             :active-file="activeFile"
             :gap-analyses="files.gapAnalyses"
@@ -46,24 +39,15 @@
           <div v-if="activeFile">
             <!-- Basic Solution Preview -->
             <div v-if="activeFile.type === 'gap'" class="excel-viewer">
-              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <ExcelPreview :excelBlob="activeFile.file.blob" />
             </div>
             <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
-              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <PdfViewer :pdfBlob="activeFile.file.blob" />
               <div style="color: green; font-size: 12px;">[PdfViewer rendered]</div>
             </div>
             <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
-              <!-- <div class="file-name">{{ activeFile.file.name }}</div> -->
               <DocxViewer :docxBlob="activeFile.file.blob" />
             </div>
-            <div v-else class="no-file-viewer">
-              <div style="color: #888;">No file selected for preview.</div>
-            </div>
-          </div>
-          <div v-else>
-            <ExcelPreview v-if="defaultExcelBlob" :excelBlob="defaultExcelBlob" />
             <div v-else class="no-file-viewer">
               <div style="color: #888;">No file selected for preview.</div>
             </div>
@@ -76,102 +60,52 @@
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
+import { onBeforeMount } from 'vue';
+import { useRouter } from 'vue-router';
+const props = defineProps({
+  initialUploadedFile: File
+});
 import ExcelPreview from '../components/ExcelPreview.vue';
 import PdfViewer from '../components/PdfViewer.vue';
 import DocxViewer from '../components/DocxViewer.vue';
 import DownloadButtons from '../components/DownloadButtons.vue';
-import UploadSection from '../components/UploadSection.vue';
 import TabNavigation from '../components/TabNavigation.vue';
-import { uploadPdf } from '../services/api.js';
 import logger from '../services/logger.js';
 
 const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
-const loading = ref(false);
 const status = ref('');
 const activeFile = ref(null);
-
-const fileInput = ref(null);
-
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
 
-const pdfBlobUnwrapped = computed(() => {
-  const blob = activeFile.value?.file?.blob;
-  if (blob instanceof Blob) return blob;
-  if (blob && blob.__v_raw) return blob.__v_raw;
-  return blob;
-});
-
-const defaultExcelBlob = ref(null);
-
-onMounted(async () => {
-  // Only fetch the template if no file is selected
-  if (!activeFile.value) {
-    try {
-      const response = await fetch('/Template.xlsx');
-      if (!response.ok) throw new Error('Failed to fetch default template');
-      const blob = await response.blob();
-      defaultExcelBlob.value = blob;
-    } catch (e) {
-      console.error('Could not load default template:', e);
+// Only set files if initialUploadedFile is present and backend data is passed
+onBeforeMount(() => {
+  if (window.history.state && window.history.state.back !== undefined && window.history.state.backendResult) {
+    files.value = window.history.state.backendResult;
+    // Set default active file
+    if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
+      activeFile.value = { type: 'gap', file: files.value.gapAnalyses[0] };
+    } else if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
+      activeFile.value = { type: 'summary', file: files.value.summaryFiles[0] };
     }
   }
 });
 
-function getFileTypeTitle(type) {
-  if (type === 'standard') return 'Standard Analysis';
-  if (type === 'gap') return 'Gap Analysis';
-  return 'Summary';
-}
+const router = useRouter();
+
+// If user navigates directly to /main, push a history entry for landing page so back button works
+onMounted(() => {
+  if (window.history.state && window.history.state.back === undefined) {
+    router.replace({ path: '/', replace: true });
+    router.push({ name: 'Main', state: { uploadedFile: props.initialUploadedFile } });
+  }
+});
 
 function setActiveFile(fileInfo) {
   activeFile.value = fileInfo;
 }
 
-function handleFileSelected(data) {
-  if (data.error) {
-    status.value = data.error;
-    return;
-  }
-  if (data.file) {
-    handleUpload(data.file);
-  }
-}
-
-
-
-async function handleUpload(file) {
-  loading.value = true;
-  status.value = `Processing Policy...`;
-  activeFile.value = null;
-  try {
-    const result = await uploadPdf(file);
-    files.value = result;
-    // console.log('files.summaryFiles in HomeView.vue:', files.value.summaryFiles);
-    console.log('gapAnalyses:', files.value.gapAnalyses);
-    console.log('summaryFiles:', files.value.summaryFiles);
-    if (Array.isArray(result.gapAnalyses) && result.gapAnalyses.length > 0) {
-      activeFile.value = { type: 'gap', file: result.gapAnalyses[0] };
-    } else if (Array.isArray(result.summaryFiles) && result.summaryFiles.length > 0) {
-      activeFile.value = { type: 'summary', file: result.summaryFiles[0] };
-    }
-    status.value = `Successfully processed ${file.name}`;
-    logger.info('Files uploaded', files.value);
-  } catch (e) {
-    status.value = `Upload failed for ${file.name}. Please try again.`;
-    logger.error('Upload failed', e);
-  } finally {
-    loading.value = false;
-  }
-}
-
 function downloadActive() {
   // This function is now handled by the DownloadButtons component
-  // It's kept for backward compatibility but the actual download logic
-  // is now in the DownloadButtons component
-}
-
-function clearStatus() {
-  status.value = '';
 }
 </script>
 
