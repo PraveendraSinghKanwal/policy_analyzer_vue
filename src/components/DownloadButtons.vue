@@ -116,13 +116,13 @@ function downloadSummaryFile() {
 .download-row-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 .download-status-row {
   width: 100%;
   min-height: 0px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: flex-start;
 }
 .download-btn {

@@ -142,7 +142,7 @@ function downloadActive() {
   align-items: center;
 }
 .amex-logo {
-  height: 30px;
+  height: 60px;
   width: auto;
   object-fit: contain;
 }
@@ -159,7 +159,6 @@ function downloadActive() {
 .action-bar-right-group {
   display: flex;
   align-items: flex-end;
-  margin-left: auto;
 }
 /* Remove .action-bar-left and .action-bar-right if not used */
 .action-bar-left, .action-bar-right {
