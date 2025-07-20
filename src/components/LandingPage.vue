@@ -286,8 +286,8 @@ function onDismissError() {
   color: #fff;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 16px;
-  padding: 20px 20px 20px 20px;
+  border-radius: 10px;
+  padding: 12px 20px 12px 20px;
   display: flex;
   flex-direction: row-reverse;
   align-items: center;
@@ -310,17 +310,17 @@ function onDismissError() {
 }
 .error-message-fixed {
   position: absolute;
-  left: 100%;
-  top: 50%;
+  left: 0%;
+  top: 130%;
   transform: translateY(-50%);
-  margin-left: 24px;
+  margin-left: 0px;
   display: inline-flex;
   background: #ffeaea;
   color: #b71c1c;
   border: 1px solid #f44336;
   border-radius: 6px;
-  padding: 12px 20px;
-  font-size: 0.8rem;
+  padding: 2px 4px 2px 4px;
+  font-size: 0.7rem;
   font-weight: 500;
 
   max-width: none;
@@ -335,7 +335,7 @@ function onDismissError() {
   font-size: 1.5rem;
   font-weight: bold;
   cursor: pointer;
-  margin-left: 16px;
+  margin-left: 2px;
   line-height: 1;
   transition: color 0.2s;
 }
