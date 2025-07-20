@@ -24,8 +24,8 @@
       <div class="landing-gain-list">
         <h2 class="gain-title">What You'll Gain</h2>
         <ul class="gain-list">
-          <li>Automated extraction of Policy content for all categories and subcategories</li>
-          <li>Comparison against <a href="https://www.amexglobalbusinesstravel.com/" target="_blank" class="amex-link">AmexGBT</a> global standards</li>
+          <li>Automated extraction of Policy content for all categories and subcategories AmexGBT global standards</li>
+          <!-- <li>Comparison against <a href="https://www.amexglobalbusinesstravel.com/" target="_blank" class="amex-link">AmexGBT</a> global standards</li> -->
           <li>Scoring your policy content for clarity and compliance</li>
           <li>Detailed gap analysis reports</li>
           <li>Recommended Policy generation or design your policy with your inputs</li>
@@ -36,6 +36,19 @@
       <img src="/amex-gbt-travelling.jpg" alt="Airport" class="landing-image" />
     </div>
     <div class="landing-upload-row">
+      <div class="landing-how-row">
+      <h2 class="how-title">How it works</h2>
+      <div class="how-steps">
+        <span class="how-step">Upload Policy →</span>
+        <span class="how-step">Analyse Benchmarking and Gaps→</span>
+        <span class="how-step">Provide your Feedback →</span>
+        <span class="how-step">Submit to redesign new policy</span>
+        <!-- <span class="how-step">1️⃣ Upload Policy →</span>
+        <span class="how-step">2️⃣ Analyse Benchmarking and Gaps→</span>
+        <span class="how-step">3️⃣ Provide your Feedback →</span>
+        <span class="how-step">📥 Submit to redesign new policy</span> -->
+      </div>
+    </div>
       <div class="upload-btn-center-wrapper">
         <label class="upload-btn-label">
           <input
@@ -56,15 +69,7 @@
         </div>
       </div>
     </div>
-    <div class="landing-how-row">
-      <h2 class="how-title">How it works</h2>
-      <div class="how-steps">
-        <span class="how-step">1️⃣ Upload Policy →</span>
-        <span class="how-step">2️⃣ Analyse Benchmarking and Gaps→</span>
-        <span class="how-step">3️⃣ Provide your Feedback →</span>
-        <span class="how-step">📥 Submit to redesign new policy</span>
-      </div>
-    </div>
+    
 
   </div>
 </template>
@@ -113,7 +118,7 @@ function onDismissError() {
   margin-bottom: 24px;
 }
 .landing-title {
-  font-size: 2.3rem;
+  font-size: 2.0rem;
   font-weight: 700;
   color: #0a2e5d;
   margin: 0 0 8px 0;
@@ -169,17 +174,13 @@ function onDismissError() {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #2563eb;
+  color: #1f325b;
   letter-spacing: 0.2px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.gain-title::before {
-  content: "\1F4AA";
-  font-size: 1.2em;
-  margin-right: 6px;
-}
+
 .gain-list {
   list-style: none;
   padding: 0;
@@ -200,7 +201,7 @@ function onDismissError() {
 }
 .gain-list li::before {
   content: "\2714";
-  color: #10b981;
+  color: #3b3b3b;
   font-weight: bold;
   margin-right: 8px;
   font-size: 1.1em;
@@ -219,7 +220,7 @@ function onDismissError() {
   transform: scale(1.03) rotate(1deg);
 }
 .landing-how-row {
-  margin: 0px 40px 10px 40px;
+  margin: 0px 0px 10px 20px;
   padding: 10px 10px;
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
@@ -230,22 +231,18 @@ function onDismissError() {
 .how-title {
   font-size: 1.18rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #1e283d;
   margin-bottom: 10px;
   letter-spacing: 0.2px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.how-title::before {
-  content: "\1F4C8";
-  font-size: 1.2em;
-  margin-right: 6px;
-}
+
 .how-steps {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 1px;
   font-size: 0.8rem;
   color: #0a2e5d;
   font-weight: 500;
@@ -255,8 +252,8 @@ function onDismissError() {
 .how-step {
   margin-right: 5px;
   background: transparent;
-  border-radius: 8px;
-  padding: 0px 6px;
+  border-radius: 5px;
+  padding: 0px 0px;
   display: flex;
   align-items: center;
   font-weight: 600;
@@ -267,7 +264,7 @@ function onDismissError() {
 }
 .landing-upload-row {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
   margin: 20px 0px 20px 0px;
   position: relative;
@@ -284,15 +281,16 @@ function onDismissError() {
   cursor: pointer;
 }
 .upload-btn {
-  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+  background: rgb(10, 10, 87);
   color: #fff;
-  font-size: 1.35rem;
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: 24px;
-  padding: 28px 56px 28px 56px;
+  border-radius: 16px;
+  padding: 20px 20px 20px 20px;
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
-  gap: 18px;
+  gap: 6px;
   transition: background 0.2s, transform 0.2s;
   border: none;
   outline: none;
