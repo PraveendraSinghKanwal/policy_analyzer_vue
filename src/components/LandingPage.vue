@@ -11,8 +11,8 @@
     <div class="landing-header-row">
       <div>
         <h1 class="landing-title">
-          Simplify your Travel Policy Management with
-          <a href="https://www.amexglobalbusinesstravel.com/" target="_blank" class="amex-link">AmexGBT</a>
+          Simplify your Travel Policy Management with AmexGBT
+          <!-- <a href="https://www.amexglobalbusinesstravel.com/" target="_blank" class="amex-link">AmexGBT</a> -->
         </h1>
         <p class="landing-subtitle">
           Effortlessly align every Category and Subcategory of your travel policy with industry standards and your business goals.
@@ -107,9 +107,9 @@ function onDismissError() {
   justify-content: space-between;
   align-items: flex-start;
   padding: 0 48px 0 48px;
-  background: rgba(255,255,255,0.85);
+  /* background: rgba(255,255,255,0.85); */
+  background: transparent;
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(37,99,235,0.07), 0 1.5px 4px rgba(0,0,0,0.03);
   margin-bottom: 24px;
 }
 .landing-title {
@@ -141,7 +141,6 @@ function onDismissError() {
   height: auto;
   margin-top: 0px;
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
   background: white;
   border: 2px solid #e0e7ef;
   transition: transform 0.2s;
@@ -160,9 +159,9 @@ function onDismissError() {
 .landing-gain-list {
   flex: 1 1 0;
   max-width: 600px;
-  background: rgba(255,255,255,0.92);
+  /* background: rgba(255,255,255,0.92); */
+  background: transparent;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
   padding: 5px 10px 5px 10px;
   margin-bottom: 0;
 }
@@ -194,10 +193,9 @@ function onDismissError() {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(90deg, #e0e7ff 0%, #f0f9ff 100%);
+  background:transparent;
   border-radius: 8px;
   padding: 4px 6px;
-  box-shadow: 0 1px 4px rgba(37,99,235,0.03);
   font-weight: 500;
 }
 .gain-list li::before {
@@ -213,7 +211,6 @@ function onDismissError() {
   object-fit: cover;
   border-radius: 16px;
   margin-left: 32px;
-  box-shadow: 0 4px 24px rgba(37,99,235,0.10);
   background: #fff;
   border: 2px solid #e0e7ef;
   transition: transform 0.2s;
@@ -224,9 +221,9 @@ function onDismissError() {
 .landing-how-row {
   margin: 0px 40px 10px 40px;
   padding: 10px 10px;
-  background: rgba(255,255,255,0.92);
+  /* background: rgba(255,255,255,0.92); */
+  background: transparent;
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
   padding-bottom: 10px;
   padding-top: 5px;
 }
@@ -257,10 +254,9 @@ function onDismissError() {
 }
 .how-step {
   margin-right: 5px;
-  background: linear-gradient(90deg, #e0e7ff 0%, #f0f9ff 100%);
+  background: transparent;
   border-radius: 8px;
   padding: 0px 6px;
-  box-shadow: 0 1px 4px rgba(37,99,235,0.03);
   display: flex;
   align-items: center;
   font-weight: 600;
@@ -297,7 +293,6 @@ function onDismissError() {
   display: flex;
   align-items: center;
   gap: 18px;
-  box-shadow: 0 4px 24px rgba(37,99,235,0.10);
   transition: background 0.2s, transform 0.2s;
   border: none;
   outline: none;
@@ -328,7 +323,7 @@ function onDismissError() {
   padding: 12px 20px;
   font-size: 0.8rem;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(244,67,54,0.08);
+
   max-width: none;
   align-items: center;
   z-index: 2;
