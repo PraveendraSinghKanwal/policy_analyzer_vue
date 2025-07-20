@@ -137,7 +137,7 @@ function onDismissError() {
   letter-spacing: 0.1px;
 }
 .landing-logo {
-  width: 120px;
+  width: 100px;
   height: auto;
   margin-top: 0px;
   border-radius: 10px;

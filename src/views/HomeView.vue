@@ -126,6 +126,7 @@ function downloadActive() {
   box-shadow: none;
   min-height: 49px;
   max-height: 62px;
+  overflow: visible; /* Allow logo to overflow */
 }
 .top-bar-left {
   display: flex;
@@ -142,9 +143,13 @@ function downloadActive() {
   align-items: center;
 }
 .amex-logo {
-  height: 60px;
+  height: 100px;
   width: auto;
   object-fit: contain;
+  margin: 10px 20px -48px 1px; /* Overlap into action-bar */
+  border-radius: 10px;
+  z-index: 2;
+  position: relative;
 }
 .action-bar {
   display: flex;
