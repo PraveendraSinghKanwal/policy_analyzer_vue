@@ -138,8 +138,8 @@ function downloadSummaryFile() {
 .download-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
+  gap: 6px;
+  padding: 4px 8px;
   font-size: 13px;
   font-weight: 600;
   border-radius: 6px;

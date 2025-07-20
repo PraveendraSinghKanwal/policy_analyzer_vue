@@ -135,7 +135,7 @@ function downloadActive() {
 .main-heading {
   font-size: calc(var(--font-size-2xl) * 1);
   font-weight: 700;
-  color: var(--primary-color);
+  color: rgb(14, 13, 78);
   letter-spacing: 1px;
 }
 .top-bar-right {
@@ -143,7 +143,7 @@ function downloadActive() {
   align-items: center;
 }
 .amex-logo {
-  height: 100px;
+  height: 80px;
   width: auto;
   object-fit: contain;
   margin: 10px 20px -48px 1px; /* Overlap into action-bar */
@@ -156,7 +156,7 @@ function downloadActive() {
   align-items: flex-end;
   gap: 24px;
   padding: var(--spacing-2) var(--spacing-8) var(--spacing-2) var(--spacing-8);
-  background: #E8F0F9;
+  background: transparent;
   border-bottom: 1px solid var(--gray-200);
   min-height: 60px;
   box-sizing: border-box;
@@ -199,7 +199,7 @@ function downloadActive() {
   flex-direction: column;
   padding: 10px;
   /* overflow: hidden; */
-  background: #E8F0F9;
+  background: #ffffff;
 }
 
 .file-name {

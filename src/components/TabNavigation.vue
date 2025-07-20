@@ -180,7 +180,7 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .main-tab.active {
-  color: var(--primary-color);
+  color: rgb(12, 6, 66);
   border-bottom-color: var(--primary-color);
   background: white;
   font-weight: 600;
@@ -230,7 +230,7 @@ function getDisplayName(filename, categoryId = null) {
   background: white; /* Force white background for all sub-tabs */
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  color: var(--gray-600);
+  color: rgb(14, 18, 89);
   font-size: 0.6rem;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -306,7 +306,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .score-badge {
   margin-left: 6px;
-  color: #1976d2;
+  color: #00166f;
   font-weight: 700;
   font-size: 0.7em;
 }

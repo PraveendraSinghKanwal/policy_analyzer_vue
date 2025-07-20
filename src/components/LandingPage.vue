@@ -15,7 +15,7 @@
           <!-- <a href="https://www.amexglobalbusinesstravel.com/" target="_blank" class="amex-link">AmexGBT</a> -->
         </h1>
         <p class="landing-subtitle">
-          Effortlessly align every Category and Subcategory of your travel policy with industry standards and your business goals.
+            Effortlessly align every Category and Subcategory of your travel policy with industry standards and your business goals.
         </p>
       </div>
       <img src="/amex-logo.jpg" alt="Amex GBT Logo" class="landing-logo" />
@@ -138,11 +138,12 @@ function onDismissError() {
   font-size: 0.8rem;
   color: #333;
   margin: 0 0 0 0;
+  padding-left: 10px;
   font-weight: 500;
   letter-spacing: 0.1px;
 }
 .landing-logo {
-  width: 100px;
+  width: 80px;
   height: auto;
   margin-top: 0px;
   border-radius: 10px;
@@ -167,7 +168,7 @@ function onDismissError() {
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
   border-radius: 16px;
-  padding: 5px 10px 5px 10px;
+  padding: 5px 10px 5px 20px;
   margin-bottom: 0;
 }
 .gain-title {
@@ -220,8 +221,8 @@ function onDismissError() {
   transform: scale(1.03) rotate(1deg);
 }
 .landing-how-row {
-  margin: 0px 0px 10px 20px;
-  padding: 10px 10px;
+  margin: 0px 0px 10px 0px;
+  padding: 0px 0px;
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
   border-radius: 16px;

@@ -128,8 +128,8 @@ h4 { font-size: var(--font-size-lg); }
 
 .btn-success {
   /* background: var(--success-color); */
-  background: #fff;
-  color: rgb(110, 109, 109);
+  background: #080154;
+  color: rgb(231, 231, 231);
 }
 
 .btn-success:hover {
