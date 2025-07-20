@@ -6,14 +6,14 @@
         :disabled="!enabled || !hasExcelFiles"
         @click="downloadExcelFiles"
       >
-        Download Excel Files
+        Download Scoring and Gap Analysis
       </button>
       <button
         class="btn btn-success download-btn"
         :disabled="!enabled || !hasSummaryFile"
         @click="downloadSummaryFile"
       >
-        Download Summary File
+        Download Gap Summary
       </button>
     </div>
     <div class="download-status-row">
@@ -139,7 +139,7 @@ function downloadSummaryFile() {
   flex-shrink: 0;
 }
 .download-btn:not(:disabled):hover {
-  background: #e0e0e0;
+  background: #7caaf5;
   box-shadow: none;
   transform: translateY(-1px);
 }
