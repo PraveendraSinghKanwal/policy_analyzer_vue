@@ -181,7 +181,7 @@ function getDisplayName(filename, categoryId = null) {
 
 .main-tab.active {
   color: rgb(12, 6, 66);
-  border-bottom-color: var(--primary-color);
+  border-bottom-color: rgb(2, 6, 81);
   background: white;
   font-weight: 600;
 }
@@ -230,7 +230,7 @@ function getDisplayName(filename, categoryId = null) {
   background: white; /* Force white background for all sub-tabs */
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  color: rgb(14, 18, 89);
+  color: rgb(80, 79, 79);
   font-size: 0.6rem;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -247,7 +247,7 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .sub-tab.active {
-  color: var(--primary-color);
+  color: rgb(15, 3, 100);
   background: white;
   box-shadow: var(--shadow-sm);
   font-weight: 600;
@@ -260,7 +260,7 @@ function getDisplayName(filename, categoryId = null) {
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--primary-color);
+  background: rgb(3, 3, 73);
 }
 
 .sub-tab:disabled {
