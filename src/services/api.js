@@ -2,16 +2,8 @@ import axios from 'axios';
 import JSZip from 'jszip';
 import logger from './logger.js';
 
-const API_BASE = '';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
-/**
- * Uploads a PDF file to the backend and parses the returned zip structure.
- * Expects a zip with:
- *   - 'Analysis/': files for the first tab
- *   - 'Summary/': files for the second tab
- *   - 'score.json': contains scores for gapAnalyses and totalScore
- * Returns: { gapAnalyses: [...], summaryFiles: [...], totalScore }
- */
 export async function uploadPdf(file) {
   const formData = new FormData();
   formData.append('file', file);
