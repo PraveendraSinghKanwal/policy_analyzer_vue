@@ -12,7 +12,7 @@
           :disabled="!enabled"
         >
           {{ category.label }}
-          <span v-if="category.id === 'gap' && totalScore !== undefined" class="score-badge">({{ totalScore }})</span>
+          <span v-if="category.id === 'gap' && totalScore !== undefined" class="score-badge">({{ totalScore }}%)</span>
         </button>
         <div v-if="index < categories.length - 1" class="main-tab-divider"></div>
       </template>
@@ -30,7 +30,7 @@
           :disabled="!enabled"
         >
           {{ getDisplayName(file.name, activeCategory) }}
-          <span v-if="file.score !== undefined" class="score-badge">({{ file.score }})</span>
+          <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
         </button>
         <div v-if="index < getCategoryFiles(activeCategory).length - 1" class="sub-tab-divider"></div>
       </template>
@@ -161,7 +161,7 @@ function getDisplayName(filename, categoryId = null) {
   border-bottom: 3px solid transparent;
   color: var(--gray-600);
   /* font-size: var(--font-size-sm); */
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -231,7 +231,7 @@ function getDisplayName(filename, categoryId = null) {
   border: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   color: rgb(80, 79, 79);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -259,7 +259,7 @@ function getDisplayName(filename, categoryId = null) {
   bottom: -1px;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: rgb(3, 3, 73);
 }
 
@@ -305,9 +305,9 @@ function getDisplayName(filename, categoryId = null) {
 }
 
 .score-badge {
-  margin-left: 6px;
-  color: #00166f;
+  margin-left: 2px;
+  color: #222c5a;
   font-weight: 700;
-  font-size: 0.7em;
+  font-size: 0.85em;
 }
 </style> 
