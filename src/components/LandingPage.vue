@@ -39,14 +39,10 @@
       <div class="landing-how-row">
       <h2 class="how-title">How it works</h2>
       <div class="how-steps">
-        <span class="how-step">Upload Policy →</span>
-        <span class="how-step">Analyse Benchmarking and Gaps→</span>
-        <span class="how-step">Provide your Feedback →</span>
-        <span class="how-step">Submit to redesign new policy</span>
-        <!-- <span class="how-step">1️⃣ Upload Policy →</span>
+        <span class="how-step">1️⃣ Upload Policy →</span>
         <span class="how-step">2️⃣ Analyse Benchmarking and Gaps→</span>
         <span class="how-step">3️⃣ Provide your Feedback →</span>
-        <span class="how-step">📥 Submit to redesign new policy</span> -->
+        <span class="how-step">4️⃣ Submit to redesign new policy</span>
       </div>
     </div>
       <div class="upload-btn-center-wrapper">
@@ -119,7 +115,7 @@ function onDismissError() {
 }
 .landing-title {
   font-size: 2.0rem;
-  font-weight: 700;
+  font-weight: 500;
   color: #0a2e5d;
   margin: 0 0 8px 0;
   letter-spacing: 0.5px;
@@ -168,12 +164,12 @@ function onDismissError() {
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
   border-radius: 16px;
-  padding: 5px 10px 5px 20px;
+  padding: 5px 10px 5px 10px;
   margin-bottom: 0;
 }
 .gain-title {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 500;
   margin-bottom: 10px;
   color: #1f325b;
   letter-spacing: 0.2px;
@@ -208,7 +204,7 @@ function onDismissError() {
   font-size: 1.1em;
 }
 .landing-image {
-  width: 400px;
+  width: 440px;
   height: 240px;
   object-fit: cover;
   border-radius: 16px;
@@ -231,7 +227,7 @@ function onDismissError() {
 }
 .how-title {
   font-size: 1.18rem;
-  font-weight: 700;
+  font-weight: 500;
   color: #1e283d;
   margin-bottom: 10px;
   letter-spacing: 0.2px;
@@ -267,10 +263,11 @@ function onDismissError() {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  margin: 20px 0px 20px 0px;
+  margin: 20px 0px 20px 4px;
   position: relative;
   width: 100%;
   min-height: 80px;
+  gap:20px;
 }
 .upload-btn-center-wrapper {
   position: relative;
