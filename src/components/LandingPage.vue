@@ -36,32 +36,36 @@
       <img src="/amex-gbt-travelling.jpg" alt="Airport" class="landing-image" />
     </div>
     <div class="landing-upload-row">
-      <div class="landing-how-row">
-      <h2 class="how-title">How it works</h2>
-      <div class="how-steps">
-        <span class="how-step">1️⃣ Upload Policy →</span>
-        <span class="how-step">2️⃣ Analyse Benchmarking and Gaps→</span>
-        <span class="how-step">3️⃣ Provide your Feedback →</span>
-        <span class="how-step">4️⃣ Submit to redesign new policy</span>
-      </div>
-    </div>
-      <div class="upload-btn-center-wrapper">
-        <label class="upload-btn-label">
-          <input
-            ref="fileInput"
-            type="file"
-            accept="application/pdf"
-            @change="onFileChange"
-            style="display:none"
-          />
-          <div class="upload-btn">
-            Upload Travel Policy
-            <img src="/pdf_upload.webp" alt="Upload" class="upload-icon" />
+      <div class="how-container">
+        <div class="landing-how-row">
+          <h2 class="how-title">How it works</h2>
+          <div class="how-steps">
+            <span class="how-step">1️⃣ Upload Policy →</span>
+            <span class="how-step">2️⃣ Analyse Benchmarking and Gaps →</span>
+            <span class="how-step">3️⃣ Provide your Feedback →</span>
+            <span class="how-step">4️⃣ Submit to redesign new policy →</span>
           </div>
-        </label>
-        <div v-if="props.errorMessage" class="error-message-fixed">
-          <span>{{ props.errorMessage }}</span>
-          <button class="error-dismiss" @click="onDismissError">&times;</button>
+        </div>
+      </div>
+      <div class="upload-btn-container">
+        <div class="upload-btn-center-wrapper">
+          <label class="upload-btn-label">
+            <input
+              ref="fileInput"
+              type="file"
+              accept="application/pdf"
+              @change="onFileChange"
+              style="display:none"
+            />
+            <div class="upload-btn">
+              Upload Travel Policy
+              <img src="/pdf_upload.webp" alt="Upload" class="upload-icon" />
+            </div>
+          </label>
+          <div v-if="props.errorMessage" class="error-message-fixed">
+            <span>{{ props.errorMessage }}</span>
+            <button class="error-dismiss" @click="onDismissError">&times;</button>
+          </div>
         </div>
       </div>
     </div>
@@ -217,7 +221,7 @@ function onDismissError() {
   transform: scale(1.03) rotate(1deg);
 }
 .landing-how-row {
-  margin: 0px 0px 10px 0px;
+  margin: 0px 0px 10px 52px;
   padding: 0px 0px;
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
@@ -261,19 +265,27 @@ function onDismissError() {
 }
 .landing-upload-row {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin: 20px 0px 20px 4px;
-  position: relative;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px; /* Space between the two sections */
   width: 100%;
-  min-height: 80px;
-  gap:20px;
+  margin: 20px 0px 0px 0px;
+}
+.how-container {
+  /* You can add margin or width here to control its position */
+  /* Example: margin-left: 40px; */
+}
+.upload-btn-container {
+  /* You can now easily adjust this independently */
+  /* Example: margin-right: 40px; */
 }
 .upload-btn-center-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Remove margin-left here for independent control */
 }
 .upload-btn-label {
   cursor: pointer;
@@ -284,6 +296,7 @@ function onDismissError() {
   font-size: 1rem;
   font-weight: 600;
   border-radius: 10px;
+  margin: 20px 120px 0px 0px;
   padding: 12px 20px 12px 20px;
   display: flex;
   flex-direction: row-reverse;
