@@ -3,14 +3,14 @@ import JSZip from 'jszip';
 import logger from './logger.js';
 
 // const API_BASE = import.meta.env.VITE_API_URL || '';
-const API_BASE = '';
+const API_BASE = 'https://uspk10dbdev01.na.hruk.pri/api/policyassist';
 
 export async function uploadPdf(file) {
   const formData = new FormData();
   formData.append('pdf_file', file);
 
   try {
-    const response = await axios.post(API_BASE + '/api/v1/upload', formData, {
+    const response = await axios.post(API_BASE + '/v1/upload', formData, {
       responseType: 'arraybuffer',
       headers: { 'Content-Type': 'multipart/form-data' },
     });
