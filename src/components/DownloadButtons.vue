@@ -25,11 +25,12 @@
         </svg>
         Download Gap Summary
       </button>
-    </div>
-    <div class="download-status-row">
       <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
         {{ downloadStatus.message }}
       </div>
+    </div>
+    <!-- The download-status-row is now empty, so it can be removed or left empty -->
+    <div class="download-status-row">
     </div>
   </div>
 </template>
@@ -77,7 +78,7 @@ async function downloadExcelFiles() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    downloadStatus.value = { type: 'success', message: 'Excel files downloaded!' };
+    downloadStatus.value = { type: 'success', message: 'Analysis files downloaded!' };
     setTimeout(() => { downloadStatus.value = null; }, 3000);
     emit('download');
   } catch (error) {
@@ -105,7 +106,7 @@ function downloadSummaryFile() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    downloadStatus.value = { type: 'success', message: 'Summary file downloaded!' };
+    downloadStatus.value = { type: 'success', message: 'Summary Gap downloaded!' };
     setTimeout(() => { downloadStatus.value = null; }, 3000);
     emit('download');
   } catch (error) {
@@ -120,6 +121,7 @@ function downloadSummaryFile() {
 .download-btn-row {
   display: flex;
   flex-direction: row;
+  align-items: flex-end; /* Aligns items to the bottom */
   gap: 16px;
   margin-bottom: 12px;
 }
@@ -132,7 +134,7 @@ function downloadSummaryFile() {
   width: 100%;
   min-height: 0px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: flex-start;
 }
 .download-btn {
@@ -158,11 +160,12 @@ function downloadSummaryFile() {
   cursor: not-allowed;
 }
 .download-status {
-  padding: 2px 2px;
-  border-radius: 2px;
-  font-size: 12px;
+  padding: 0px 4px 0px 4px;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 500;
-  text-align: center;
+  text-align: start;
+  margin-left: 0px; /* Add some space between the button and the message */
 }
 .download-status.info {
   background: #e3f2fd;
