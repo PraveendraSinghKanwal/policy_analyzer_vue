@@ -106,7 +106,7 @@ function downloadSummaryFile() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    downloadStatus.value = { type: 'success', message: 'Summary Gap downloaded!' };
+    downloadStatus.value = { type: 'success', message: 'Gap Summary downloaded!' };
     setTimeout(() => { downloadStatus.value = null; }, 3000);
     emit('download');
   } catch (error) {
