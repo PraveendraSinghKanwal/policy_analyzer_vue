@@ -43,7 +43,7 @@
             <span class="how-step">1️⃣ Upload Policy →</span>
             <span class="how-step">2️⃣ Analyse Benchmarking and Gaps →</span>
             <span class="how-step">3️⃣ Provide your Feedback →</span>
-            <span class="how-step">4️⃣ Submit to redesign new policy →</span>
+            <span class="how-step">4️⃣ Submit to redesign new policy</span>
           </div>
         </div>
       </div>
@@ -221,7 +221,7 @@ function onDismissError() {
   transform: scale(1.03) rotate(1deg);
 }
 .landing-how-row {
-  margin: 0px 0px 10px 52px;
+  margin: 0px 0px 10px 58px;
   padding: 0px 0px;
   /* background: rgba(255,255,255,0.92); */
   background: transparent;
