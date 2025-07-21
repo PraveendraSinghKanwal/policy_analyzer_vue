@@ -2,11 +2,12 @@ import axios from 'axios';
 import JSZip from 'jszip';
 import logger from './logger.js';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = '';
 
 export async function uploadPdf(file) {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('pdf_file', file);
 
   try {
     const response = await axios.post(API_BASE + '/api/v1/upload', formData, {
