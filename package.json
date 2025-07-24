@@ -13,8 +13,7 @@
     "jszip": "^3.10.1",
     "mammoth": "^1.6.0",
     "vue": "^3.4.0",
-    "vue-router": "^4.5.1",
-    "xlsx": "^0.18.5"
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.4.0",
