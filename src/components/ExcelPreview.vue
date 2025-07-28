@@ -251,7 +251,7 @@ watch(() => [props.jsonData, props.currentFileName], () => {
 
 .excel-table th {
   border: 1px solid #ccc;
-  padding: 4px 4px;
+  padding: 4px 8px;
   text-align: center;
   vertical-align: top;
   font-size: 0.6rem;
@@ -260,20 +260,28 @@ watch(() => [props.jsonData, props.currentFileName], () => {
   position: sticky;
   top: 0;
   z-index: 2;
-  height: 25px;
+  height: auto;
   min-height: 25px;
-  max-height: 25px;
   border-bottom: 2px solid #888;
   background: #f5f5f5;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
 }
 
 .excel-table td {
   border: 1px solid #ccc;
-  padding: 4px 4px;
+  padding: 4px 8px;
   text-align: left;
   vertical-align: top;
   font-size: 0.6rem;
   color: #222;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+  height: auto;
 }
 
 .loading {
