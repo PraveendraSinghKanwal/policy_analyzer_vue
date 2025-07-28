@@ -2,18 +2,18 @@
   <div class="excel-preview">
     <div v-if="loading" class="loading">Loading Excel preview...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="fileData && fileData.data && fileData.data.length > 0" class="table-container">
+    <div v-else-if="filteredFileData && filteredFileData.data && filteredFileData.data.length > 0" class="table-container">
       <table class="excel-table">
         <thead>
           <tr>
-            <th v-for="(cell, index) in fileData.data[0]" :key="index"
+            <th v-for="(cell, index) in filteredFileData.data[0]" :key="index"
                 :style="getCellStyle(0, index)">
               {{ getCellValue(0, index) || `Column ${index + 1}` }}
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, rowIndex) in fileData.data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
+          <tr v-for="(row, rowIndex) in filteredFileData.data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
             <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="getCellStyle(rowIndex + 1, cellIndex)">
               <span :style="getTextStyle(rowIndex + 1, cellIndex)">{{ getCellValue(rowIndex + 1, cellIndex) || '' }}</span>
             </td>
@@ -60,6 +60,37 @@ const fileData = computed(() => {
   return null;
 });
 
+// Filtered data without 'Category' column
+const filteredFileData = computed(() => {
+  if (!fileData.value || !fileData.value.data || fileData.value.data.length === 0) {
+    return null;
+  }
+
+  const originalData = fileData.value.data;
+  const headerRow = originalData[0];
+  
+  // Find the index of the 'Category' column
+  const categoryColumnIndex = headerRow.findIndex(cell => {
+    const cellValue = Array.isArray(cell) && cell.length > 0 ? cell[0] : '';
+    return cellValue === 'Category';
+  });
+
+  // If 'Category' column not found, return original data
+  if (categoryColumnIndex === -1) {
+    return fileData.value;
+  }
+
+  // Filter out the 'Category' column from all rows
+  const filteredData = originalData.map(row => 
+    row.filter((_, index) => index !== categoryColumnIndex)
+  );
+
+  return {
+    ...fileData.value,
+    data: filteredData
+  };
+});
+
 // Debug: Log whenever jsonData prop changes
 watch(() => props.jsonData, (val) => {
   console.log('jsonData prop:', val);
@@ -72,14 +103,14 @@ watch(fileData, (val) => {
 
 // Get cell value from the cell array
 function getCellValue(rowIndex, colIndex) {
-  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  const cell = filteredFileData.value?.data?.[rowIndex]?.[colIndex];
   if (!cell || !Array.isArray(cell) || cell.length === 0) return '';
   return cell[0]; // First element is the cell data
 }
 
 // Get complete cell style (container + text styles)
 function getCellStyle(rowIndex, colIndex) {
-  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  const cell = filteredFileData.value?.data?.[rowIndex]?.[colIndex];
   if (!cell || !Array.isArray(cell) || cell.length < 12) return {};
   
   const style = {};
@@ -121,7 +152,7 @@ function getCellStyle(rowIndex, colIndex) {
 
 // Get text-specific styles
 function getTextStyle(rowIndex, colIndex) {
-  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  const cell = filteredFileData.value?.data?.[rowIndex]?.[colIndex];
   if (!cell || !Array.isArray(cell) || cell.length < 12) return {};
   
   const style = {};
@@ -154,7 +185,7 @@ function getTextStyle(rowIndex, colIndex) {
 
 // Get row style (height)
 function getRowStyle(rowIndex) {
-  const row = fileData.value?.data?.[rowIndex];
+  const row = filteredFileData.value?.data?.[rowIndex];
   if (!row || !Array.isArray(row) || row.length === 0) return {};
   
   const firstCell = row[0];
