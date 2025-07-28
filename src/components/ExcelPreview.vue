@@ -36,6 +36,16 @@ const props = defineProps({
 const loading = ref(false);
 const error = ref(null);
 
+// Read left-aligned columns from environment variable
+// The .env file should contain: VITE_LEFT_ALIGNED_COLUMNS=5,9
+const leftAlignedColumns = computed(() => {
+  const envValue = import.meta.env.VITE_LEFT_ALIGNED_COLUMNS;
+  if (!envValue) return [];
+  
+  // Parse comma-separated string into array of numbers
+  return envValue.split(',').map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+});
+
 // Single file data - simplified for separate JSON files
 const fileData = computed(() => {
   // Check if jsonData has the required structure
@@ -77,8 +87,19 @@ function getCellStyle(rowIndex, colIndex) {
   // Background color
   if (cell[2]) style.backgroundColor = cell[2];
   
-  // Text alignment
-  if (cell[8]) style.textAlign = cell[8];
+  // Text alignment - Apply left alignment for specified columns (except header row)
+  if (rowIndex === 0) {
+    // Header row - use original alignment from JSON
+    if (cell[8]) style.textAlign = cell[8];
+  } else {
+    // Data rows - check if this column should be left-aligned
+    if (leftAlignedColumns.value.includes(colIndex)) {
+      style.textAlign = 'left';
+    } else {
+      // Use original alignment from JSON for other columns
+      if (cell[8]) style.textAlign = cell[8];
+    }
+  }
   
   // Vertical alignment
   if (cell[9]) style.verticalAlign = cell[9];
