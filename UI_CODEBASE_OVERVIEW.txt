@@ -21,7 +21,7 @@ Startup:
 Main View (HomeView.vue):
 - Top Bar: Shows the app title and Amex logo.
 - Action Bar:
-  - Left: UploadSection for uploading a PDF.
+  - Left: UploadSection for uploading PDF or DOCX files.
   - Right: DownloadButtons for downloading processed files.
 - Main Content:
   - Tab Navigation: TabNavigation lets users switch between file categories (Content Extraction & Scoring, Gap Analysis, Summary).
@@ -33,8 +33,8 @@ State Management:
 - loading, status: For upload progress and messages.
 
 User Actions:
-- Upload: User uploads a PDF via UploadSection.
-  - Triggers handleUpload, which calls uploadPdf (API).
+- Upload: User uploads a PDF or DOCX via UploadSection.
+  - Triggers handleUpload, which calls uploadPolicy (API).
   - Backend returns a ZIP with processed files, which are parsed and categorized.
   - The first available file is auto-selected for preview.
 - Tab Navigation: User selects a category/file via TabNavigation.
@@ -44,9 +44,10 @@ User Actions:
 3. Key Components
 -----------------
 UploadSection.vue
-- Renders a button to upload a PDF.
+- Renders a button to upload PDF or DOCX files.
 - Handles file input and emits file-selected to parent.
 - Shows upload status (loading, success, error).
+- Validates file types (PDF and DOCX only).
 
 DownloadButtons.vue
 - Lets users select which file types to download (standard, gap, summary).
@@ -64,8 +65,9 @@ ExcelPreview.vue, PdfViewer.vue, DocxViewer.vue
 4. API & Backend Communication
 -----------------------------
 api.js
-- uploadPdf(file):
-  - Sends the uploaded PDF to /api/v1/upload endpoint.
+- uploadPolicy(file):
+  - Accepts both PDF and DOCX files.
+  - Determines file type and sends appropriate parameter (pdf_file or docx_file) to /api/v1/upload endpoint.
   - Expects a ZIP file in response.
   - Uses JSZip to extract files and categorize them:
     - standardAnalyses: Excel files starting with "standard_analyses".
@@ -81,9 +83,9 @@ api.js
 
 6. Typical User Flow
 --------------------
-1. User uploads a PDF via the upload button.
-2. App sends the PDF to the backend (/api/v1/upload).
-3. Backend processes the PDF and returns a ZIP with categorized files.
+1. User uploads a PDF or DOCX via the upload button.
+2. App validates file type and sends the file to the backend (/api/v1/upload).
+3. Backend processes the file and returns a ZIP with categorized files.
 4. App parses the ZIP and updates the UI:
    - Tabs and sub-tabs are populated.
    - The first file is auto-selected and previewed.
@@ -94,10 +96,11 @@ api.js
 ----------------
 - The modular component structure allows for easy addition of new file types, previewers, or categories.
 - API logic is separated, making backend endpoint changes straightforward.
+- File type validation is centralized and easily extensible.
 
 8. Summary Diagram
 ------------------
-User Uploads PDF -> UploadSection emits file-selected -> HomeView handleUpload -> api.js uploadPdf -> Backend /api/v1/upload -> ZIP with files -> api.js parses ZIP -> HomeView sets files & activeFile -> TabNavigation & Preview update -> User navigates tabs / User downloads files via DownloadButtons
+User Uploads PDF/DOCX -> UploadSection validates and emits file-selected -> HomeView handleUpload -> api.js uploadPolicy -> Backend /api/v1/upload -> ZIP with files -> api.js parses ZIP -> HomeView sets files & activeFile -> TabNavigation & Preview update -> User navigates tabs / User downloads files via DownloadButtons
 
 In summary:
-This is a Vue 3 SPA for uploading a policy PDF, processing it on the backend, and letting users preview and download categorized analysis files. The flow is clean, modular, and user-friendly, with clear separation of concerns between UI, logic, and API communication. 
+This is a Vue 3 SPA for uploading policy files (PDF or DOCX), processing them on the backend, and letting users preview and download categorized analysis files. The flow is clean, modular, and user-friendly, with clear separation of concerns between UI, logic, and API communication. The application now supports both PDF and DOCX file uploads with proper validation and error handling. 

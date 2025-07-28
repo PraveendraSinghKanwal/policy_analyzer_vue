@@ -1,10 +1,10 @@
 # Policy Extraction App (Vue 3 SPA)
 
-This is a production-ready single-page application (SPA) built with Vue 3 and Vite. It allows users to upload a PDF, processes it via a backend API, and displays/downloads three analysis PDFs.
+This is a production-ready single-page application (SPA) built with Vue 3 and Vite. It allows users to upload a PDF or DOCX file, processes it via a backend API, and displays/downloads three analysis files.
 
 ## Features
-- Upload PDF and receive three analysis PDFs (Standard, Gap, Summary)
-- View and download each PDF
+- Upload PDF or DOCX and receive analysis files (Standard, Gap, Summary)
+- View and download each file
 - Responsive, modern UI
 - Error handling and logging
 
@@ -24,7 +24,7 @@ This is a production-ready single-page application (SPA) built with Vue 3 and Vi
    ```
 
 ## API
-- Expects a backend endpoint `/api/v1/upload` as described in the API documentation.
+- Expects a backend endpoint `/api/v1/upload` that accepts both `pdf_file` and `docx_file` parameters.
 
 ## Project Structure
 - `src/components/` — UI components

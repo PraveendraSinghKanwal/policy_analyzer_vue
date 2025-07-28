@@ -53,12 +53,12 @@
             <input
               ref="fileInput"
               type="file"
-              accept="application/pdf"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               @change="onFileChange"
               style="display:none"
             />
             <div class="upload-btn">
-              Upload Travel Policy
+              Upload Policy (PDF/DOCX)
               <img src="/pdf_upload.webp" alt="Upload" class="upload-icon" />
             </div>
           </label>
@@ -83,9 +83,25 @@ const props = defineProps({
   errorMessage: String
 });
 const fileInput = ref(null);
+
+function validateFileType(file) {
+  const validTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  const validExtensions = ['.pdf', '.docx'];
+  
+  const isValidType = validTypes.includes(file.type);
+  const isValidExtension = validExtensions.some(ext => 
+    file.name.toLowerCase().endsWith(ext)
+  );
+  
+  return isValidType || isValidExtension;
+}
+
 function onFileChange(e) {
   const file = e.target.files[0];
-  if (file && file.type === 'application/pdf') {
+  if (file && validateFileType(file)) {
     emit('file-selected', file);
   }
   // Reset input so the same file can be selected again

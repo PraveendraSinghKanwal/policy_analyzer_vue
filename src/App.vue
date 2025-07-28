@@ -25,7 +25,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { uploadPdf } from './services/api.js';
+import { uploadPolicy } from './services/api.js';
 
 const router = useRouter();
 const processing = ref(false);
@@ -39,14 +39,14 @@ async function onFileSelected(file) {
   processingMessage.value = 'Processing Policy...';
   errorMessage.value = '';
   try {
-    // Call backend API to process PDF
-    const result = await uploadPdf(file);
+    // Call backend API to process file
+    const result = await uploadPolicy(file);
     uploadedFile.value = file;
     backendResult.value = result;
     // Navigate to main UI, passing file and backendResult as prop
     router.push({ name: 'Main', state: { uploadedFile: file, backendResult: result } });
   } catch (e) {
-    errorMessage.value = 'Upload failed. Please try again.';
+    errorMessage.value = 'Upload failed. Please ensure you uploaded a valid PDF or DOCX file.';
     processing.value = false;
     processingMessage.value = '';
     return;

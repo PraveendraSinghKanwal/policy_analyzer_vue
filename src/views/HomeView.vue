@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="top-bar">
       <div class="top-bar-left">
-        <span class="main-heading">Policy Assist</span>
+        <span class="main-heading">{{ mainHeadingText }}</span>
       </div>
       <div class="top-bar-right">
         <img src="/amex-logo.jpg" alt="Amex GBT Logo" class="amex-logo" />
@@ -119,6 +119,16 @@ const activeFileJsonData = computed(() => {
   return null;
 });
 
+// Computed property for the main heading text
+const mainHeadingText = computed(() => {
+  if (files.value && files.value.uploadedFileName) {
+    // Remove file extension from the filename (handles multiple dots)
+    const fileNameWithoutExtension = files.value.uploadedFileName.replace(/\.(pdf|docx)$/i, '');
+    return `Policy Assist for ${fileNameWithoutExtension}`;
+  }
+  return 'Policy Assist';
+});
+
 // Debug: Log activeFile changes
 watch(activeFile, (newVal) => {
   console.log('Active file changed:', newVal);
@@ -173,6 +183,11 @@ watch(activeFileJsonData, (newVal) => {
 onBeforeMount(async () => {
   if (window.history.state && window.history.state.back !== undefined && window.history.state.backendResult) {
     files.value = window.history.state.backendResult;
+    
+    // Store the uploaded file name for display in heading
+    if (window.history.state.uploadedFile) {
+      files.value.uploadedFileName = window.history.state.uploadedFile.name;
+    }
     
     // Use the JSON data from the ZIP response
     if (files.value.excelJsonData) {

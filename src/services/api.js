@@ -5,9 +5,21 @@ import logger from './logger.js';
 // const API_BASE = import.meta.env.VITE_API_URL || '';
 const API_BASE = '';
 
-export async function uploadPdf(file) {
+export async function uploadPolicy(file) {
   const formData = new FormData();
-  formData.append('pdf_file', file);
+  
+  // Determine file type and use appropriate parameter name
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  const isDocx = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                 file.name.toLowerCase().endsWith('.docx');
+  
+  if (isPdf) {
+    formData.append('pdf_file', file);
+  } else if (isDocx) {
+    formData.append('docx_file', file);
+  } else {
+    throw new Error('Unsupported file type. Please upload PDF or DOCX files only.');
+  }
 
   try {
     const response = await axios.post(API_BASE + '/api/v1/upload', formData, {
@@ -85,4 +97,9 @@ export async function uploadPdf(file) {
     logger.error('Upload failed', error);
     throw error;
   }
+}
+
+// Keep the old function name for backward compatibility
+export async function uploadPdf(file) {
+  return uploadPolicy(file);
 } 

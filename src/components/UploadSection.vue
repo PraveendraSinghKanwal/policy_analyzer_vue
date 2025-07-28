@@ -1,12 +1,12 @@
 <template>
   <div class="upload-single-btn">
     <button class="btn-upload-pdf" :disabled="props.loading" @click="triggerFileInput">
-      <img src="/pdf_upload.webp" alt="PDF" class="pdf-icon" />
+      <img src="/pdf_upload.webp" alt="Upload" class="pdf-icon" />
     </button>
     <input 
       ref="fileInput" 
       type="file" 
-      accept="application/pdf" 
+      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
       style="display: none" 
       @change="handleFileSelect" 
     />
@@ -59,14 +59,32 @@ watch(() => props.status, (newStatus, oldStatus) => {
   }
 });
 
+function validateFileType(file) {
+  const validTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
+  const validExtensions = ['.pdf', '.docx'];
+  
+  const isValidType = validTypes.includes(file.type);
+  const isValidExtension = validExtensions.some(ext => 
+    file.name.toLowerCase().endsWith(ext)
+  );
+  
+  return isValidType || isValidExtension;
+}
+
 function triggerFileInput() {
   fileInput.value?.click();
 }
 
 function handleFileSelect(event) {
   const file = event.target.files[0];
-  if (file) {
+  if (file && validateFileType(file)) {
     emit('file-selected', { file });
+  } else if (file) {
+    // Reset input if invalid file type
+    event.target.value = '';
   }
 }
 </script>
