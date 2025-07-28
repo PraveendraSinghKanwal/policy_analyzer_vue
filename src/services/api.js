@@ -30,12 +30,14 @@ export async function uploadPdf(file) {
 
     const gapAnalyses = [];
     const summaryFiles = [];
+    const excelJsonData = {}; // Store JSON data for Excel files
 
     // Loop through all files in the zip
     const files = Object.keys(zip.files);
     for (const filename of files) {
       if (zip.files[filename].dir) continue;
       const lower = filename.toLowerCase();
+      
       if (lower.startsWith('analysis/')) {
         const blob = await zip.files[filename].async('blob');
         // Find score for this file
@@ -55,16 +57,29 @@ export async function uploadPdf(file) {
           name: filename.split('/').pop(),
           blob: blob
         });
+      } else if (lower.startsWith('excel_data/')) {
+        // Extract JSON files from excel_data folder
+        const jsonText = await zip.files[filename].async('string');
+        try {
+          const jsonData = JSON.parse(jsonText);
+          // Store JSON data with the Excel filename (without .json extension)
+          const excelFileName = filename.split('/').pop().replace('.json', '');
+          excelJsonData[excelFileName] = jsonData;
+        } catch (error) {
+          console.error(`Error parsing JSON file ${filename}:`, error);
+        }
       }
     }
 
     // console.log('gapAnalyses:', gapAnalyses);
     // console.log('summaryFiles:', summaryFiles);
+    // console.log('excelJsonData:', excelJsonData);
 
     return {
       gapAnalyses,
       summaryFiles,
-      totalScore: scoreData.totalScore
+      totalScore: scoreData.totalScore,
+      excelJsonData // Include the JSON data in the response
     };
   } catch (error) {
     logger.error('Upload failed', error);

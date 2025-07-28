@@ -39,7 +39,10 @@
           <div v-if="activeFile">
             <!-- Basic Solution Preview -->
             <div v-if="activeFile.type === 'gap'" class="excel-viewer">
-              <ExcelPreview :excelBlob="activeFile.file.blob" />
+              <ExcelPreview 
+                :jsonData="activeFileJsonData" 
+                :currentFileName="activeFile.file.name" 
+              />
             </div>
             <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
               <PdfViewer :pdfBlob="activeFile.file.blob" />
@@ -75,12 +78,108 @@ import logger from '../services/logger.js';
 const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
 const status = ref('');
 const activeFile = ref(null);
+const excelJsonData = ref({}); // Store JSON data for each Excel file
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
 
+// Computed property to get JSON data for the active file
+const activeFileJsonData = computed(() => {
+  if (!activeFile.value || activeFile.value.type !== 'gap') return null;
+  
+  const fileName = activeFile.value.file.name;
+  const jsonKeys = Object.keys(excelJsonData.value);
+  
+  // First try exact match (without extension)
+  const fileNameWithoutExt = fileName.replace(/\.(xlsx|xls)$/i, '');
+  if (excelJsonData.value[fileNameWithoutExt]) {
+    return excelJsonData.value[fileNameWithoutExt];
+  }
+  
+  // Try to find a matching JSON file by name similarity
+  // Prioritize keys that are more similar to the filename
+  const matchingKey = jsonKeys.find(key => {
+    const keyLower = key.toLowerCase();
+    const fileNameLower = fileNameWithoutExt.toLowerCase();
+    
+    // Exact match (case insensitive)
+    if (keyLower === fileNameLower) return true;
+    
+    // Check if the key is a prefix of the filename (e.g., "Air_Travel" matches "Air_Travel2")
+    if (fileNameLower.startsWith(keyLower + '_') || fileNameLower === keyLower) return true;
+    
+    // Check if the filename is a prefix of the key (e.g., "Air_Travel2" matches "Air_Travel2_Extended")
+    if (keyLower.startsWith(fileNameLower + '_') || keyLower === fileNameLower) return true;
+    
+    return false;
+  });
+  
+  if (matchingKey) {
+    return excelJsonData.value[matchingKey];
+  }
+  
+  return null;
+});
+
+// Debug: Log activeFile changes
+watch(activeFile, (newVal) => {
+  console.log('Active file changed:', newVal);
+  if (newVal && newVal.type === 'gap') {
+    console.log('Active file name:', newVal.file.name);
+    const fileNameWithoutExt = newVal.file.name.replace(/\.(xlsx|xls)$/i, '');
+    console.log('File name without extension:', fileNameWithoutExt);
+    console.log('Available JSON keys:', Object.keys(excelJsonData.value));
+    console.log('JSON data for active file:', excelJsonData.value[newVal.file.name]);
+    
+    // Try to find a matching JSON file
+    const fileName = newVal.file.name;
+    const jsonKeys = Object.keys(excelJsonData.value);
+    
+    // Check exact match first
+    if (excelJsonData.value[fileNameWithoutExt]) {
+      console.log('Found exact match for:', fileNameWithoutExt);
+      console.log('Exact match JSON data:', excelJsonData.value[fileNameWithoutExt]);
+    } else {
+      // Try improved matching logic
+      const matchingKey = jsonKeys.find(key => {
+        const keyLower = key.toLowerCase();
+        const fileNameLower = fileNameWithoutExt.toLowerCase();
+        
+        if (keyLower === fileNameLower) return true;
+        if (fileNameLower.startsWith(keyLower + '_') || fileNameLower === keyLower) return true;
+        if (keyLower.startsWith(fileNameLower + '_') || keyLower === fileNameLower) return true;
+        return false;
+      });
+      
+      if (matchingKey) {
+        console.log('Found matching JSON key:', matchingKey);
+        console.log('Matching JSON data:', excelJsonData.value[matchingKey]);
+      } else {
+        console.log('No matching JSON key found for file:', fileName);
+      }
+    }
+  }
+}, { immediate: true });
+
+// Debug: Log excelJsonData changes
+watch(excelJsonData, (newVal) => {
+  console.log('excelJsonData updated:', newVal);
+}, { deep: true });
+
+// Debug: Log activeFileJsonData changes
+watch(activeFileJsonData, (newVal) => {
+  console.log('activeFileJsonData computed value:', newVal);
+}, { immediate: true });
+
 // Only set files if initialUploadedFile is present and backend data is passed
-onBeforeMount(() => {
+onBeforeMount(async () => {
   if (window.history.state && window.history.state.back !== undefined && window.history.state.backendResult) {
     files.value = window.history.state.backendResult;
+    
+    // Use the JSON data from the ZIP response
+    if (files.value.excelJsonData) {
+      excelJsonData.value = files.value.excelJsonData;
+      console.log('Loaded JSON data from ZIP response:', excelJsonData.value);
+    }
+    
     // Set default active file
     if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
       activeFile.value = { type: 'gap', file: files.value.gapAnalyses[0] };

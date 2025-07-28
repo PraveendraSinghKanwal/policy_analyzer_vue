@@ -2,20 +2,20 @@
   <div class="excel-preview">
     <div v-if="loading" class="loading">Loading Excel preview...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="data && data[0] && data[0].some(cell => cell !== '' && cell != null)" class="table-container">
+    <div v-else-if="fileData && fileData.data && fileData.data.length > 0" class="table-container">
       <table class="excel-table">
         <thead>
           <tr>
-            <th v-for="(cell, index) in data[0]" :key="index"
-                :style="{ ...getColStyle(index), ...pickHeaderBg(getCellContainerStyle(0, index, true)) }">
-              {{ cell !== undefined && cell !== null && cell !== '' ? (typeof cell === 'object' ? JSON.stringify(cell) : cell) : `Column ${index + 1}` }}
+            <th v-for="(cell, index) in fileData.data[0]" :key="index"
+                :style="getCellStyle(0, index)">
+              {{ getCellValue(0, index) || `Column ${index + 1}` }}
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, rowIndex) in data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
-            <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="{ ...getCellContainerStyle(rowIndex + 1, cellIndex), ...getColStyle(cellIndex) }">
-              <span :style="getCellTextStyle(rowIndex + 1, cellIndex)">{{ cell || '' }}</span>
+          <tr v-for="(row, rowIndex) in fileData.data.slice(1)" :key="rowIndex" :style="getRowStyle(rowIndex + 1)">
+            <td v-for="(cell, cellIndex) in row" :key="cellIndex" :style="getCellStyle(rowIndex + 1, cellIndex)">
+              <span :style="getTextStyle(rowIndex + 1, cellIndex)">{{ getCellValue(rowIndex + 1, cellIndex) || '' }}</span>
             </td>
           </tr>
         </tbody>
@@ -26,226 +26,156 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import * as XLSX from 'xlsx-js-style';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
-  excelBlob: Object
+  jsonData: Object, // Single file JSON data from backend API
+  currentFileName: String // Current file name to display (optional, for validation)
 });
 
-const data = ref(null);
 const loading = ref(false);
 const error = ref(null);
-const columnWidths = ref({});
-const rowHeights = ref({});
-const cellStyles = ref([]); // stores cell styles
 
-watch(() => props.excelBlob, async (blob) => {
-  if (!blob) {
-    data.value = null;
-    error.value = null;
-    columnWidths.value = {};
-    rowHeights.value = {};
-    cellStyles.value = [];
+// Single file data - simplified for separate JSON files
+const fileData = computed(() => {
+  // Check if jsonData has the required structure
+  if (props.jsonData?.name && props.jsonData?.data) {
+    // Validate filename if currentFileName is provided
+    if (props.currentFileName && props.jsonData.name !== props.currentFileName) {
+      return null;
+    }
+    return props.jsonData;
+  }
+  
+  return null;
+});
+
+// Debug: Log whenever jsonData prop changes
+watch(() => props.jsonData, (val) => {
+  console.log('jsonData prop:', val);
+}, { immediate: true });
+
+// Debug: Log whenever fileData changes
+watch(fileData, (val) => {
+  console.log('fileData:', val);
+}, { immediate: true });
+
+// Get cell value from the cell array
+function getCellValue(rowIndex, colIndex) {
+  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  if (!cell || !Array.isArray(cell) || cell.length === 0) return '';
+  return cell[0]; // First element is the cell data
+}
+
+// Get complete cell style (container + text styles)
+function getCellStyle(rowIndex, colIndex) {
+  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  if (!cell || !Array.isArray(cell) || cell.length < 12) return {};
+  
+  const style = {};
+  
+  // Background color
+  if (cell[2]) style.backgroundColor = cell[2];
+  
+  // Text alignment
+  if (cell[8]) style.textAlign = cell[8];
+  
+  // Vertical alignment
+  if (cell[9]) style.verticalAlign = cell[9];
+  
+  // Column width
+  if (cell[10]) {
+    style.width = `${cell[10]}px`;
+    style.minWidth = `${cell[10]}px`;
+    style.maxWidth = `${cell[10]}px`;
+  }
+  
+  // Debug: Log styles for first few cells
+  if (rowIndex === 0 && colIndex < 3) {
+    console.log(`Cell [${rowIndex}][${colIndex}] style:`, style);
+  }
+  
+  return style;
+}
+
+// Get text-specific styles
+function getTextStyle(rowIndex, colIndex) {
+  const cell = fileData.value?.data?.[rowIndex]?.[colIndex];
+  if (!cell || !Array.isArray(cell) || cell.length < 12) return {};
+  
+  const style = {};
+  
+  // Font color
+  if (cell[1]) style.color = cell[1];
+  
+  // Font weight
+  if (cell[3]) style.fontWeight = cell[3];
+  
+  // Font style
+  if (cell[4]) style.fontStyle = cell[4];
+  
+  // Text decoration
+  if (cell[5]) style.textDecoration = cell[5];
+  
+  // Font size
+  if (cell[6]) style.fontSize = cell[6];
+  
+  // Font family
+  if (cell[7]) style.fontFamily = cell[7];
+  
+  // Debug: Log text styles for first few cells
+  if (rowIndex === 0 && colIndex < 3) {
+    console.log(`Cell [${rowIndex}][${colIndex}] text style:`, style);
+  }
+  
+  return style;
+}
+
+// Get row style (height)
+function getRowStyle(rowIndex) {
+  const row = fileData.value?.data?.[rowIndex];
+  if (!row || !Array.isArray(row) || row.length === 0) return {};
+  
+  const firstCell = row[0];
+  if (!Array.isArray(firstCell) || firstCell.length < 12) return {};
+  
+  const style = {};
+  
+  // Row height
+  if (firstCell[11]) {
+    style.height = `${firstCell[11]}px`;
+    style.minHeight = `${firstCell[11]}px`;
+  }
+  
+  return style;
+}
+
+// Watch for changes in props
+watch(() => [props.jsonData, props.currentFileName], () => {
+  if (!props.jsonData) {
+    error.value = 'No JSON data provided';
     return;
   }
   
-  loading.value = true;
+  // Validate single file format
+  if (!props.jsonData.name || !props.jsonData.data) {
+    error.value = 'Invalid JSON format. Expected single file format with "name" and "data" properties.';
+    return;
+  }
+  
+  // Validate filename if provided
+  if (props.currentFileName && props.jsonData.name !== props.currentFileName) {
+    error.value = `Expected file "${props.currentFileName}" but received "${props.jsonData.name}"`;
+    return;
+  }
+  
+  if (!fileData.value) {
+    error.value = 'No valid file data found';
+    return;
+  }
+  
   error.value = null;
-  
-  try {
-    const arrayBuffer = await blob.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array', cellStyles: true });
-    
-    // Get the first worksheet
-    const firstSheetName = workbook.SheetNames[0];
-    if (!firstSheetName) {
-      throw new Error('No worksheet found in the Excel file');
-    }
-    
-    const worksheet = workbook.Sheets[firstSheetName];
-    if (!worksheet) {
-      throw new Error('No worksheet found in the Excel file');
-    }
-
-    // Convert to JSON with styling information
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-      header: 1, 
-      defval: '',
-      raw: false
-    });
-
-    // Extract styles from the worksheet
-    const stylesData = extractStylesFromWorksheet(worksheet, jsonData);
-    
-    // Extract column widths and row heights
-    extractColumnWidthsAndRowHeights(worksheet, jsonData);
-    
-    data.value = jsonData;
-    cellStyles.value = stylesData;
-  } catch (err) {
-    error.value = 'Failed to parse Excel file: ' + err.message;
-    console.error('XLSX parsing error:', err);
-  } finally {
-    loading.value = false;
-  }
 }, { immediate: true });
-
-function extractStylesFromWorksheet(worksheet, jsonData) {
-  const stylesData = [];
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  
-  for (let row = range.s.r; row <= range.e.r; row++) {
-    const rowStyles = [];
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-      const cell = worksheet[cellAddress];
-      rowStyles[col] = extractCellStyle(cell);
-    }
-    stylesData.push(rowStyles);
-  }
-  
-  return stylesData;
-}
-
-function extractColumnWidthsAndRowHeights(worksheet, jsonData) {
-  // Extract column widths
-  if (worksheet['!cols']) {
-    worksheet['!cols'].forEach((col, index) => {
-      if (col && col.width) {
-        // Convert Excel width to pixels (similar to ExcelJS formula)
-        const excelWidth = Math.floor(col.width * 5 + 5);
-        let headerText = jsonData[0]?.[index] || '';
-        let headerTextWidth = measureTextWidth(headerText, '0.6rem Calibri, Arial, sans-serif');
-        columnWidths.value[index] = Math.max(excelWidth, headerTextWidth + 24);
-      }
-    });
-  }
-  
-  // Extract row heights
-  if (worksheet['!rows']) {
-    worksheet['!rows'].forEach((row, index) => {
-      if (row && row.hpt) {
-        // Convert points to pixels
-        rowHeights.value[index + 1] = row.hpt * 0.75;
-      }
-    });
-  }
-}
-
-function getColStyle(colIndex) {
-  const style = {};
-  if (columnWidths.value[colIndex]) {
-    style.width = `${columnWidths.value[colIndex]}px`;
-    style.minWidth = `${columnWidths.value[colIndex]}px`;
-    style.maxWidth = `${columnWidths.value[colIndex]}px`;
-  }
-  return style;
-}
-
-function getRowStyle(rowIndex) {
-  const style = {};
-  if (rowHeights.value[rowIndex]) {
-    style.height = `${rowHeights.value[rowIndex]}px`;
-    style.minHeight = `${rowHeights.value[rowIndex]}px`;
-  }
-  return style;
-}
-
-// Extracts style from XLSX cell
-function extractCellStyle(cell) {
-  const style = {};
-  
-  if (!cell || !cell.s) {
-    return style;
-  }
-  
-  const cellStyle = cell.s;
-  
-  // Font color
-  if (cellStyle.font && cellStyle.font.color && cellStyle.font.color.rgb) {
-    style.color = '#' + cellStyle.font.color.rgb;
-  }
-  
-  // Background color (fill)
-  if (cellStyle.fill && cellStyle.fill.fgColor && cellStyle.fill.fgColor.rgb) {
-    style.backgroundColor = '#' + cellStyle.fill.fgColor.rgb;
-  }
-  
-  // Font weight
-  if (cellStyle.font && cellStyle.font.bold) {
-    style.fontWeight = 'bold';
-  }
-  
-  // Italic
-  if (cellStyle.font && cellStyle.font.italic) {
-    style.fontStyle = 'italic';
-  }
-  
-  // Underline
-  if (cellStyle.font && cellStyle.font.underline) {
-    style.textDecoration = 'underline';
-  }
-  
-  // Font size
-  if (cellStyle.font && cellStyle.font.sz) {
-    style.fontSize = cellStyle.font.sz + 'pt';
-  }
-  
-  // Font family
-  if (cellStyle.font && cellStyle.font.name) {
-    style.fontFamily = cellStyle.font.name;
-  }
-  
-  // Text alignment
-  if (cellStyle.alignment && cellStyle.alignment.horizontal) {
-    style.textAlign = cellStyle.alignment.horizontal;
-  }
-  if (cellStyle.alignment && cellStyle.alignment.vertical) {
-    style.verticalAlign = cellStyle.alignment.vertical;
-  }
-  
-  return style;
-}
-
-// Split cell style into container (cell) and text styles
-function getCellContainerStyle(rowIndex, colIndex, isHeader = false) {
-  const style = cellStyles.value[rowIndex]?.[colIndex] || {};
-  // Only use backgroundColor, textAlign, verticalAlign for cell container
-  const cellStyle = {};
-  if (style.backgroundColor) cellStyle.backgroundColor = style.backgroundColor + ' !important';
-  if (style.textAlign) cellStyle.textAlign = style.textAlign;
-  if (style.verticalAlign) cellStyle.verticalAlign = style.verticalAlign;
-  return cellStyle;
-}
-
-function getCellTextStyle(rowIndex, colIndex, isHeader = false) {
-  const style = cellStyles.value[rowIndex]?.[colIndex] || {};
-  // Only use text styles for span, but DO NOT apply fontSize
-  const textStyle = {};
-  if (style.color) textStyle.color = style.color;
-  if (style.fontWeight) textStyle.fontWeight = style.fontWeight;
-  if (style.fontStyle) textStyle.fontStyle = style.fontStyle;
-  if (style.textDecoration) textStyle.textDecoration = style.textDecoration;
-  // Do NOT apply fontSize from Excel
-  if (style.fontFamily) textStyle.fontFamily = style.fontFamily;
-  return textStyle;
-}
-
-// Add a utility to pick only backgroundColor for header
-function pickHeaderBg(cellStyle) {
-  return cellStyle && cellStyle.backgroundColor ? { backgroundColor: cellStyle.backgroundColor } : {};
-}
-
-// Utility to measure text width in px for a given font
-function measureTextWidth(text, font) {
-  if (!measureTextWidth.canvas) {
-    measureTextWidth.canvas = document.createElement('canvas');
-  }
-  const context = measureTextWidth.canvas.getContext('2d');
-  context.font = font;
-  return context.measureText(text).width;
-}
 </script>
 
 <style>
@@ -272,24 +202,48 @@ function measureTextWidth(text, font) {
   padding: 4px 4px;
   text-align: center;
   vertical-align: top;
-  font-size: 0.6rem !important;
+  font-size: 0.6rem;
   color: #fff;
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 2;
-  height: 25px !important;
-  min-height: 25px !important;
-  max-height: 25px !important;
-  border-bottom: 2px solid #888 !important;
-  background: #f5f5f5 !important;
+  height: 25px;
+  min-height: 25px;
+  max-height: 25px;
+  border-bottom: 2px solid #888;
+  background: #f5f5f5;
 }
+
 .excel-table td {
   border: 1px solid #ccc;
   padding: 4px 4px;
-  text-align: left !important;
+  text-align: left;
   vertical-align: top;
-  font-size: 0.6rem !important;
+  font-size: 0.6rem;
   color: #222;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error {
+  text-align: center;
+  padding: 20px;
+  color: #d32f2f;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  margin: 10px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
 }
 </style> 
