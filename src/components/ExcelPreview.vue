@@ -231,56 +231,76 @@ watch(() => [props.jsonData, props.currentFileName], () => {
 </script>
 
 <style>
+/* CSS Custom Properties for global control */
+.excel-preview {
+  --excel-font-size: 0.6rem;
+  --excel-cell-padding: 4px 8px;
+  --excel-line-height: 1.2;
+  --excel-border-color: #ccc;
+  --excel-container-background: #fff;
+  --excel-table-background: #fff;
+  --excel-header-default-bg: #f5f5f5;
+  --excel-text-color: #222;
+  --excel-header-text-color: #fff;
+  --excel-table-max-height: 62vh;
+  --excel-border-bottom-color: #eee;
+  --excel-header-border-bottom: #888;
+  --excel-font-family: Calibri, Arial, sans-serif;
+}
+
+
 .table-container {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-y: auto;
-  max-height: 62vh;
-  background: #fff;
-  border-bottom: 2px solid #eee;
+  max-height: var(--excel-table-max-height);
+  background: var(--excel-container-background);
+  border-bottom: 2px solid var(--excel-border-bottom-color);
   position: relative;
 }
 
 .excel-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  font-family: Calibri, Arial, sans-serif;
+  background: var(--excel-table-background);
+  font-family: var(--excel-font-family);
 }
 
 .excel-table th {
-  border: 1px solid #ccc;
-  padding: 4px 8px;
+  border: 1px solid var(--excel-border-color);
+  padding: 2px 0px 2px 0px;
   text-align: center;
   vertical-align: top;
-  font-size: 0.6rem;
-  color: #fff;
+  font-size: 0.8rem;
+  color: var(--excel-header-text-color);
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 2;
   height: auto;
   min-height: 25px;
-  border-bottom: 2px solid #888;
-  background: #f5f5f5;
+  border-bottom: 1px solid var(--excel-header-border-bottom);
+  border-top: 1px solid var(--excel-header-border-bottom);
+  background: var(--excel-header-default-bg);
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  line-height: 1.2;
+  line-height: var(--excel-line-height);
 }
 
 .excel-table td {
-  border: 1px solid #ccc;
-  padding: 4px 8px;
+  border: 1px solid var(--excel-border-color);
+  /* padding: var(--excel-cell-padding); */
+  padding: 4px 4px;
   text-align: left;
   vertical-align: top;
   font-size: 0.6rem;
-  color: #222;
+  color: var(--excel-text-color);
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  line-height: 1.3;
+  line-height: var(--excel-line-height);
   height: auto;
 }
 
