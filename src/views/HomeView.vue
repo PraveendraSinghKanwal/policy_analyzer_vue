@@ -48,7 +48,7 @@
       <!-- Content Area with Vertical Sub-tabs and Preview -->
       <div class="content-area">
         <!-- Vertical Sub-tabs (only for gap analysis) -->
-        <div v-if="activeCategory === 'gap' && files.gapAnalyses.length > 0" 
+        <div v-if="activeCategory === 'gap' && sortedGapAnalyses.length > 0" 
              class="vertical-sub-tabs" 
              :style="{ 
                '--sub-tab-width': subTabWidth + 'px',
@@ -57,7 +57,7 @@
           <div class="resize-handle" @mousedown="startResize"></div>
           <div class="sub-tabs-container">
             <button
-              v-for="(file, index) in files.gapAnalyses"
+              v-for="(file, index) in sortedGapAnalyses"
               :key="file.name"
               :class="{ 
                 'vertical-sub-tab': true,
@@ -123,6 +123,7 @@ import DocxViewer from '../components/DocxViewer.vue';
 import DownloadButtons from '../components/DownloadButtons.vue';
 import TabNavigation from '../components/TabNavigation.vue';
 import logger from '../services/logger.js';
+import { getCategorySequenceFromEnv } from '../config/categorySequence.js';
 
 const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
 const status = ref('');
@@ -131,6 +132,50 @@ const activeCategory = ref('gap'); // Track active main tab
 const excelJsonData = ref({}); // Store JSON data for each Excel file
 const subTabWidth = ref(null); // Will be set from CSS variable
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
+
+// Get category sequence from environment or fallback to default
+const categorySequence = computed(() => getCategorySequenceFromEnv());
+
+// Computed property for sorted gap analyses based on sequence
+const sortedGapAnalyses = computed(() => {
+  if (!files.value?.gapAnalyses) return [];
+  
+  // If no sequence is defined, return original order
+  if (!categorySequence.value || categorySequence.value.length === 0) {
+    return [...files.value.gapAnalyses];
+  }
+  
+  return [...files.value.gapAnalyses].sort((a, b) => {
+    // Get the original filename without extension for better matching
+    const aFileName = a.name.replace(/\.(xlsx|xls)$/i, '');
+    const bFileName = b.name.replace(/\.(xlsx|xls)$/i, '');
+    
+    // Try to match against the sequence
+    const aIndex = categorySequence.value.findIndex(category => {
+      const categoryNormalized = category.toLowerCase().replace(/[&_]/g, '');
+      const fileNameNormalized = aFileName.toLowerCase().replace(/[&_]/g, '');
+      return fileNameNormalized.includes(categoryNormalized) || categoryNormalized.includes(fileNameNormalized);
+    });
+    
+    const bIndex = categorySequence.value.findIndex(category => {
+      const categoryNormalized = category.toLowerCase().replace(/[&_]/g, '');
+      const fileNameNormalized = bFileName.toLowerCase().replace(/[&_]/g, '');
+      return fileNameNormalized.includes(categoryNormalized) || categoryNormalized.includes(fileNameNormalized);
+    });
+    
+    // If both found in sequence, sort by sequence order
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex;
+    }
+    
+    // If only one found in sequence, prioritize it
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    
+    // If neither found in sequence, maintain original order
+    return 0;
+  });
+});
 
 // Computed property to get JSON data for the active file
 const activeFileJsonData = computed(() => {
@@ -249,7 +294,12 @@ onBeforeMount(async () => {
     // Set default active category and file
     if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
       activeCategory.value = 'gap';
-      activeFile.value = { type: 'gap', file: files.value.gapAnalyses[0] };
+      // Use sorted array for initial selection
+      nextTick(() => {
+        if (sortedGapAnalyses.value.length > 0) {
+          activeFile.value = { type: 'gap', file: sortedGapAnalyses.value[0] };
+        }
+      });
     } else if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
       activeCategory.value = 'summary';
       activeFile.value = null; // Summary shows all files directly
@@ -282,9 +332,9 @@ onMounted(() => {
 function selectMainTab(category) {
   activeCategory.value = category;
   
-  if (category === 'gap' && files.value.gapAnalyses.length > 0) {
-    // Auto-select first file in gap analysis
-    selectFile(files.value.gapAnalyses[0], 'gap');
+  if (category === 'gap' && sortedGapAnalyses.value.length > 0) {
+    // Auto-select first file in gap analysis (now sorted)
+    selectFile(sortedGapAnalyses.value[0], 'gap');
   } else if (category === 'summary') {
     // Clear active file for summary tab
     activeFile.value = null;
