@@ -9,7 +9,6 @@
       </div>
     </div>
     <div class="action-bar">
-      <!-- UploadSection removed -->
       <div class="action-bar-right-group">
         <DownloadButtons
           :enabled="!!files"
@@ -19,40 +18,90 @@
         />
       </div>
     </div>
-    <div class="main-scrollable" v-if="files">
-      <!-- Upper Section: Tab Navigation -->
-      <div class="upper-section">
-        <div class="tab-section">
-          <TabNavigation
-            :enabled="!!files"
-            :active-file="activeFile"
-            :gap-analyses="files.gapAnalyses"
-            :summary-files="files.summaryFiles"
-            :total-score="files.totalScore"
-            @select-file="setActiveFile"
-          />
+    
+    <div class="main-content" v-if="files">
+      <!-- Main Horizontal Tabs -->
+      <div class="main-tabs-container">
+        <div class="main-tabs">
+          <button
+            :class="{ 
+              'main-tab': true,
+              'active': activeCategory === 'gap' 
+            }"
+            @click="selectMainTab('gap')"
+          >
+            Content Extraction and Scoring and Gap Analysis
+            <span v-if="files.totalScore !== undefined" class="score-badge">({{ files.totalScore }}%)</span>
+          </button>
+          <button
+            :class="{ 
+              'main-tab': true,
+              'active': activeCategory === 'summary' 
+            }"
+            @click="selectMainTab('summary')"
+          >
+            Gap Summary
+          </button>
         </div>
       </div>
-      <!-- Lower Section: File Preview -->
-      <div class="lower-section">
-        <div class="preview-content">
-          <div v-if="activeFile">
-            <!-- Basic Solution Preview -->
+
+      <!-- Content Area with Vertical Sub-tabs and Preview -->
+      <div class="content-area">
+        <!-- Vertical Sub-tabs (only for gap analysis) -->
+        <div v-if="activeCategory === 'gap' && files.gapAnalyses.length > 0" 
+             class="vertical-sub-tabs" 
+             :style="{ 
+               '--sub-tab-width': subTabWidth + 'px',
+               width: 'var(--sub-tab-width)'
+             }">
+          <div class="resize-handle" @mousedown="startResize"></div>
+          <div class="sub-tabs-container">
+            <button
+              v-for="(file, index) in files.gapAnalyses"
+              :key="file.name"
+              :class="{ 
+                'vertical-sub-tab': true,
+                'active': isFileActive(file, 'gap')
+              }"
+              @click="selectFile(file, 'gap')"
+            >
+              {{ getDisplayName(file.name) }}
+              <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Content Preview Area -->
+        <div class="preview-area">
+          <div v-if="activeFile" class="preview-content">
+            <!-- Excel Preview -->
             <div v-if="activeFile.type === 'gap'" class="excel-viewer">
               <ExcelPreview 
                 :jsonData="activeFileJsonData" 
                 :currentFileName="activeFile.file.name" 
               />
             </div>
+            <!-- PDF Preview -->
             <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
               <PdfViewer :pdfBlob="activeFile.file.blob" />
-              <div style="color: green; font-size: 12px;">[PdfViewer rendered]</div>
             </div>
+            <!-- DOCX Preview -->
             <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
               <DocxViewer :docxBlob="activeFile.file.blob" />
             </div>
             <div v-else class="no-file-viewer">
               <div style="color: #888;">No file selected for preview.</div>
+            </div>
+          </div>
+          <!-- Show summary files directly when summary tab is active -->
+          <div v-else-if="activeCategory === 'summary' && files.summaryFiles.length > 0" class="summary-content">
+            <div v-for="(file, index) in files.summaryFiles" :key="file.name" class="summary-file">
+              <div v-if="file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
+                <PdfViewer :pdfBlob="file.blob" />
+              </div>
+              <div v-else-if="file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
+                <DocxViewer :docxBlob="file.blob" />
+              </div>
             </div>
           </div>
         </div>
@@ -62,7 +111,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, nextTick } from 'vue';
 import { onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 const props = defineProps({
@@ -78,7 +127,9 @@ import logger from '../services/logger.js';
 const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
 const status = ref('');
 const activeFile = ref(null);
+const activeCategory = ref('gap'); // Track active main tab
 const excelJsonData = ref({}); // Store JSON data for each Excel file
+const subTabWidth = ref(null); // Will be set from CSS variable
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
 
 // Computed property to get JSON data for the active file
@@ -195,13 +246,26 @@ onBeforeMount(async () => {
       console.log('Loaded JSON data from ZIP response:', excelJsonData.value);
     }
     
-    // Set default active file
+    // Set default active category and file
     if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
+      activeCategory.value = 'gap';
       activeFile.value = { type: 'gap', file: files.value.gapAnalyses[0] };
     } else if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
-      activeFile.value = { type: 'summary', file: files.value.summaryFiles[0] };
+      activeCategory.value = 'summary';
+      activeFile.value = null; // Summary shows all files directly
     }
   }
+  
+  // Initialize sub-tab width from CSS variable
+  nextTick(() => {
+    const element = document.querySelector('.vertical-sub-tabs');
+    if (element) {
+      const defaultWidth = parseInt(getComputedStyle(element).getPropertyValue('--sub-tab-default-width')) || 280;
+      subTabWidth.value = defaultWidth;
+    } else {
+      subTabWidth.value = 280; // Fallback
+    }
+  });
 });
 
 const router = useRouter();
@@ -214,8 +278,100 @@ onMounted(() => {
   }
 });
 
+// Main tab selection
+function selectMainTab(category) {
+  activeCategory.value = category;
+  
+  if (category === 'gap' && files.value.gapAnalyses.length > 0) {
+    // Auto-select first file in gap analysis
+    selectFile(files.value.gapAnalyses[0], 'gap');
+  } else if (category === 'summary') {
+    // Clear active file for summary tab
+    activeFile.value = null;
+  }
+}
+
+// File selection from vertical sub-tabs
+function selectFile(file, category) {
+  activeFile.value = { type: category, file };
+}
+
+// Check if file is active
+function isFileActive(file, category) {
+  return activeFile.value && 
+         activeFile.value.type === category && 
+         activeFile.value.file.name === file.name;
+}
+
+// Get display name for files
+function getDisplayName(filename) {
+  // Remove the prefix and extension for display
+  let displayName = filename;
+
+  if (filename.startsWith('Gap_analyses_')) {
+    displayName = filename.replace('Gap_analyses_', '');
+  }
+
+  // Remove file extension
+  displayName = displayName.replace(/\.(xlsx|xls|pdf|docx)$/i, '');
+
+  // Replace underscores with spaces and capitalize
+  displayName = displayName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+  return displayName.trim() || filename;
+}
+
+// Resize functionality for vertical sub-tabs
+function startResize(event) {
+  event.preventDefault();
+  
+  const startX = event.clientX;
+  const startWidth = subTabWidth.value;
+  
+  function onMouseMove(e) {
+    const newWidth = startWidth + (e.clientX - startX);
+    
+    // Get CSS variable constraints
+    const element = event.target.closest('.vertical-sub-tabs');
+    const minWidth = parseInt(getComputedStyle(element).getPropertyValue('--sub-tab-min-width')) || 200;
+    const maxWidth = parseInt(getComputedStyle(element).getPropertyValue('--sub-tab-max-width')) || 400;
+    
+    subTabWidth.value = Math.max(minWidth, Math.min(maxWidth, newWidth));
+  }
+  
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+  
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
 function setActiveFile(fileInfo) {
   activeFile.value = fileInfo;
+}
+
+// Function to update CSS variables for sub-tab width constraints
+function updateSubTabConstraints(minWidth = 200, maxWidth = 400, defaultWidth = 280) {
+  const element = document.querySelector('.vertical-sub-tabs');
+  if (element) {
+    element.style.setProperty('--sub-tab-min-width', minWidth + 'px');
+    element.style.setProperty('--sub-tab-max-width', maxWidth + 'px');
+    element.style.setProperty('--sub-tab-default-width', defaultWidth + 'px');
+    
+    // Update current width if it's outside new constraints
+    if (subTabWidth.value < minWidth) {
+      subTabWidth.value = minWidth;
+    } else if (subTabWidth.value > maxWidth) {
+      subTabWidth.value = maxWidth;
+    }
+    
+    // If current width is null or undefined, set to default
+    if (subTabWidth.value === null || subTabWidth.value === undefined) {
+      subTabWidth.value = defaultWidth;
+    }
+  }
 }
 
 function downloadActive() {
@@ -283,37 +439,165 @@ function downloadActive() {
 .action-bar-left, .action-bar-right {
   display: none;
 }
-.main-scrollable {
+.main-content {
   flex: 1;
-  min-height: 0;
-  min-width: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  background: #E8F0F9;
 }
-.upper-section {
+
+.main-tabs-container {
   flex-shrink: 0;
   background: #E8F0F9;
+  border-bottom: 1px solid #ccc;
 }
-.tab-section {
+
+.main-tabs {
+  display: flex;
   background: #E8F0F9;
 }
-.lower-section {
+
+.main-tab {
   flex: 1;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.main-tab:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #1976d2;
+}
+
+.main-tab.active {
+  color: #0c0e4e;
+  border-bottom-color: #020651;
+  background: white;
+  font-weight: 600;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
   min-height: 0;
+  background: #E8F0F9;
+}
+
+.vertical-sub-tabs {
+  --sub-tab-min-width: 20px;
+  --sub-tab-default-width: 200px;
+  --sub-tab-max-width: 400px;
+  --sub-tab-width: var(--sub-tab-default-width);
+  
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid #ccc;
+  position: relative;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: #E8F0F9;
+  width: var(--sub-tab-width);
+  min-width: var(--sub-tab-min-width);
+  max-width: var(--sub-tab-max-width);
 }
+
+.resize-handle {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+}
+
+.resize-handle:hover {
+  background: rgba(25, 118, 210, 0.1);
+}
+
+.sub-tabs-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow-y: auto;
+}
+
+.vertical-sub-tab {
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  border-left: 3px solid transparent;
+  color: #666;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vertical-sub-tab:hover:not(:disabled) {
+  background: #f5f5f5;
+  color: #1976d2;
+}
+
+.vertical-sub-tab.active {
+  color: #0c0e4e;
+  border-left-color: #020651;
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0; /* Allow shrinking */
+  background: white;
+  overflow: hidden; /* Let children handle overflow */
+}
+
 .preview-content {
   flex: 1;
   min-height: 0;
+  min-width: 0; /* Allow shrinking */
   display: flex;
   flex-direction: column;
   padding: 10px;
-  /* overflow: hidden; */
   background: #ffffff;
+  overflow-x: auto; /* Enable horizontal scroll */
+  overflow-y: auto; /* Keep vertical scroll */
+}
+
+.summary-content {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.summary-file {
+  margin-bottom: 20px;
 }
 
 .file-name {
@@ -331,6 +615,8 @@ function downloadActive() {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   padding: 5px;
   margin-bottom: 16px;
+  overflow-x: auto; /* Enable horizontal scroll for Excel viewer */
+  min-width: 0; /* Allow shrinking */
 }
 
 .no-file-viewer {
@@ -378,6 +664,13 @@ function downloadActive() {
   margin: 0;
   min-width: 120px;
   text-align: left;
+}
+
+.score-badge {
+  margin-left: 4px;
+  color: #222c5a;
+  font-weight: 700;
+  font-size: 0.85em;
 }
 
 </style> 

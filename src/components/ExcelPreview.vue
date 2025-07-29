@@ -250,10 +250,10 @@ watch(() => [props.jsonData, props.currentFileName], () => {
 
 
 .table-container {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-y: auto;
+  width: max-content; /* Let table take its natural width */
+  min-width: 100%; /* At least full container width */
+  overflow-x: auto; /* Enable horizontal scroll */
+  overflow-y: auto; /* Keep vertical scroll */
   max-height: var(--excel-table-max-height);
   background: var(--excel-container-background);
   border-bottom: 2px solid var(--excel-border-bottom-color);
