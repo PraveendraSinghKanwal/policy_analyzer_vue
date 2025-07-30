@@ -26,21 +26,21 @@
           <button
             :class="{ 
               'main-tab': true,
+              'active': activeCategory === 'summary' 
+            }"
+            @click="selectMainTab('summary')"
+          >
+            Gap Summary
+          </button>
+          <button
+            :class="{ 
+              'main-tab': true,
               'active': activeCategory === 'gap' 
             }"
             @click="selectMainTab('gap')"
           >
             Content Extraction and Scoring and Gap Analysis
             <span v-if="files.totalScore !== undefined" class="score-badge">({{ files.totalScore }}%)</span>
-          </button>
-          <button
-            :class="{ 
-              'main-tab': true,
-              'active': activeCategory === 'summary' 
-            }"
-            @click="selectMainTab('summary')"
-          >
-            Gap Summary
           </button>
         </div>
       </div>
@@ -51,8 +51,7 @@
         <div v-if="activeCategory === 'gap' && sortedGapAnalyses.length > 0" 
              class="vertical-sub-tabs" 
              :style="{ 
-               '--sub-tab-width': subTabWidth + 'px',
-               width: 'var(--sub-tab-width)'
+               '--sub-tab-width': subTabWidth + 'px'
              }">
           <div class="resize-handle" @mousedown="startResize"></div>
           <div class="sub-tabs-container">
@@ -133,7 +132,7 @@ import { getCategorySequenceFromEnv } from '../config/categorySequence.js';
 const files = ref(null); // { standardAnalyses: [], gapAnalyses: [], summaryFile: null }
 const status = ref('');
 const activeFile = ref(null);
-const activeCategory = ref('gap'); // Track active main tab
+const activeCategory = ref('summary'); // Track active main tab
 const excelJsonData = ref({}); // Store JSON data for each Excel file
 const subTabWidth = ref(null); // Will be set from CSS variable
 const isError = computed(() => status.value.toLowerCase().includes('fail'));
@@ -312,7 +311,10 @@ onBeforeMount(async () => {
     }
     
     // Set default active category and file
-    if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
+    if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
+      activeCategory.value = 'summary';
+      activeFile.value = null; // Summary shows all files directly
+    } else if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
       activeCategory.value = 'gap';
       // Use sorted array for initial selection
       nextTick(() => {
@@ -320,20 +322,27 @@ onBeforeMount(async () => {
           activeFile.value = { type: 'gap', file: sortedGapAnalyses.value[0] };
         }
       });
-    } else if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
-      activeCategory.value = 'summary';
-      activeFile.value = null; // Summary shows all files directly
     }
   }
   
   // Initialize sub-tab width from CSS variable
   nextTick(() => {
-    const element = document.querySelector('.vertical-sub-tabs');
-    if (element) {
-      const defaultWidth = parseInt(getComputedStyle(element).getPropertyValue('--sub-tab-default-width')) || 280;
+    // Create a temporary element to read CSS variables
+    const tempElement = document.createElement('div');
+    tempElement.className = 'vertical-sub-tabs';
+    tempElement.style.position = 'absolute';
+    tempElement.style.visibility = 'hidden';
+    document.body.appendChild(tempElement);
+    
+    try {
+      const defaultWidth = parseInt(getComputedStyle(tempElement).getPropertyValue('--sub-tab-default-width')) || 200;
+      console.log('CSS default width:', defaultWidth);
       subTabWidth.value = defaultWidth;
-    } else {
-      subTabWidth.value = 280; // Fallback
+    } catch (error) {
+      console.log('Error reading CSS variable, using fallback:', error);
+      subTabWidth.value = 200; // Fallback
+    } finally {
+      document.body.removeChild(tempElement);
     }
   });
 });
@@ -423,7 +432,7 @@ function setActiveFile(fileInfo) {
 }
 
 // Function to update CSS variables for sub-tab width constraints
-function updateSubTabConstraints(minWidth = 200, maxWidth = 400, defaultWidth = 280) {
+function updateSubTabConstraints(minWidth = 100, maxWidth = 400, defaultWidth = 400) {
   const element = document.querySelector('.vertical-sub-tabs');
   if (element) {
     element.style.setProperty('--sub-tab-min-width', minWidth + 'px');
