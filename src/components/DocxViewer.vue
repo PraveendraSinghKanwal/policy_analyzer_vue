@@ -20,26 +20,69 @@ const props = defineProps({
 const content = ref(null);
 const loading = ref(false);
 const error = ref(null);
+const processing = ref(false); // Prevent multiple simultaneous processing
 
 watch(() => props.docxBlob, async (blob) => {
+  console.log('DocxViewer received blob:', blob);
+  
   if (!blob) {
     content.value = null;
     error.value = null;
+    console.log('No blob provided to DocxViewer');
     return;
   }
   
+  // Prevent multiple simultaneous processing
+  if (processing.value) {
+    console.log('Already processing a blob, skipping...');
+    return;
+  }
+  
+  console.log('Blob details:', {
+    type: blob.type,
+    size: blob.size,
+    lastModified: blob.lastModified
+  });
+  
+  // Validate blob before processing
+  if (blob.size < 1000) {
+    error.value = 'File appears to be corrupted or incomplete';
+    console.error('Blob too small, likely corrupted:', blob.size, 'bytes');
+    return;
+  }
+  
+  // Check if blob has content type (optional but helpful)
+  if (blob.type && blob.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    console.warn('Blob type is not DOCX:', blob.type);
+  }
+  
+  processing.value = true;
   loading.value = true;
   error.value = null;
   
   try {
     const arrayBuffer = await blob.arrayBuffer();
+    console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
+    
+    // Additional validation for array buffer
+    if (arrayBuffer.byteLength < 1000) {
+      throw new Error('File content is too small to be a valid DOCX file');
+    }
+    
     const result = await mammoth.convertToHtml({ arrayBuffer });
     content.value = result.value;
+    console.log('DOCX parsed successfully');
   } catch (err) {
     error.value = 'Failed to parse DOCX file';
     console.error('DOCX parsing error:', err);
+    console.error('Error details:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
   } finally {
     loading.value = false;
+    processing.value = false;
   }
 }, { immediate: true });
 </script>

@@ -96,11 +96,16 @@
           <!-- Show summary files directly when summary tab is active -->
           <div v-else-if="activeCategory === 'summary' && files.summaryFiles.length > 0" class="summary-content">
             <div v-for="(file, index) in files.summaryFiles" :key="file.name" class="summary-file">
-              <div v-if="file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
+              <div v-if="file.name.toLowerCase().endsWith('.pdf') && file.blob" class="pdf-viewer">
                 <PdfViewer :pdfBlob="file.blob" />
               </div>
-              <div v-else-if="file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
+              <div v-else-if="file.name.toLowerCase().endsWith('.docx') && file.blob && file.blob.size > 1000" class="docx-viewer">
                 <DocxViewer :docxBlob="file.blob" />
+              </div>
+              <div v-else class="no-file-viewer">
+                <div style="color: #888;">
+                  {{ file.name }} - {{ file.blob ? 'Processing...' : 'No data available' }}
+                </div>
               </div>
             </div>
           </div>
@@ -289,6 +294,21 @@ onBeforeMount(async () => {
     if (files.value.excelJsonData) {
       excelJsonData.value = files.value.excelJsonData;
       console.log('Loaded JSON data from ZIP response:', excelJsonData.value);
+    }
+    
+    // Debug: Log summary files
+    if (files.value.summaryFiles) {
+      console.log('Summary files found:', files.value.summaryFiles);
+      files.value.summaryFiles.forEach((file, index) => {
+        console.log(`Summary file ${index}:`, {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          blob: file.blob,
+          hasBlob: !!file.blob,
+          blobType: file.blob ? file.blob.type : 'no blob'
+        });
+      });
     }
     
     // Set default active category and file
