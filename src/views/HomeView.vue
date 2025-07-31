@@ -51,7 +51,8 @@
         <div v-if="activeCategory === 'gap' && sortedGapAnalyses.length > 0" 
              class="vertical-sub-tabs" 
              :style="{ 
-               '--sub-tab-width': subTabWidth + 'px'
+               '--sub-tab-width': subTabWidth + 'px',
+               width: 'var(--sub-tab-width)'
              }">
           <div class="resize-handle" @mousedown="startResize"></div>
           <div class="sub-tabs-container">
@@ -327,23 +328,16 @@ onBeforeMount(async () => {
   
   // Initialize sub-tab width from CSS variable
   nextTick(() => {
-    // Create a temporary element to read CSS variables
-    const tempElement = document.createElement('div');
-    tempElement.className = 'vertical-sub-tabs';
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    document.body.appendChild(tempElement);
+    // Read CSS variables from document root or any existing element
+    const rootWidth = getComputedStyle(document.documentElement).getPropertyValue('--sub-tab-default-width');
+    const bodyWidth = getComputedStyle(document.body).getPropertyValue('--sub-tab-default-width');
     
-    try {
-      const defaultWidth = parseInt(getComputedStyle(tempElement).getPropertyValue('--sub-tab-default-width')) || 200;
-      console.log('CSS default width:', defaultWidth);
-      subTabWidth.value = defaultWidth;
-    } catch (error) {
-      console.log('Error reading CSS variable, using fallback:', error);
-      subTabWidth.value = 200; // Fallback
-    } finally {
-      document.body.removeChild(tempElement);
-    }
+    console.log('Root CSS variable:', rootWidth);
+    console.log('Body CSS variable:', bodyWidth);
+    
+    const defaultWidth = parseInt(rootWidth) || parseInt(bodyWidth) || 200;
+    console.log('Final default width:', defaultWidth);
+    subTabWidth.value = defaultWidth;
   });
 });
 
@@ -432,7 +426,7 @@ function setActiveFile(fileInfo) {
 }
 
 // Function to update CSS variables for sub-tab width constraints
-function updateSubTabConstraints(minWidth = 100, maxWidth = 400, defaultWidth = 400) {
+function updateSubTabConstraints(minWidth = 20, maxWidth = 400, defaultWidth = 50) {
   const element = document.querySelector('.vertical-sub-tabs');
   if (element) {
     element.style.setProperty('--sub-tab-min-width', minWidth + 'px');
@@ -458,7 +452,16 @@ function downloadActive() {
 }
 </script>
 
+<style>
+:root {
+  --sub-tab-min-width: 20px;
+  --sub-tab-default-width: 200px;
+  --sub-tab-max-width: 400px;
+}
+</style>
+
 <style scoped>
+
 .app-container {
   height: 100vh;
   display: flex;
@@ -576,9 +579,6 @@ function downloadActive() {
 }
 
 .vertical-sub-tabs {
-  --sub-tab-min-width: 20px;
-  --sub-tab-default-width: 200px;
-  --sub-tab-max-width: 400px;
   --sub-tab-width: var(--sub-tab-default-width);
   
   flex-shrink: 0;
@@ -663,7 +663,7 @@ function downloadActive() {
   min-width: 0; /* Allow shrinking */
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 4px 4px 0px 4px;
   background: #ffffff;
   overflow-x: auto; /* Enable horizontal scroll */
   overflow-y: auto; /* Keep vertical scroll */
@@ -693,7 +693,7 @@ function downloadActive() {
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   padding: 5px;
-  margin-bottom: 16px;
+  margin-bottom: 0px;
   overflow-x: auto; /* Enable horizontal scroll for Excel viewer */
   min-width: 0; /* Allow shrinking */
 }
