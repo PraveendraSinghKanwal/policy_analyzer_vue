@@ -43,6 +43,7 @@ export async function uploadPolicy(file) {
     const gapAnalyses = [];
     const summaryFiles = [];
     const excelJsonData = {}; // Store JSON data for Excel files
+    let gapSummaryJsonData = null; // Store Gap Summary JSON data
 
     // Loop through all files in the zip
     const files = Object.keys(zip.files);
@@ -69,6 +70,17 @@ export async function uploadPolicy(file) {
           name: filename.split('/').pop(),
           blob: blob
         });
+        
+        // Check if this is the Gap_Summary.json file
+        if (filename.toLowerCase().includes('gap_summary.json')) {
+          try {
+            const jsonText = await zip.files[filename].async('string');
+            gapSummaryJsonData = JSON.parse(jsonText);
+            console.log('Gap Summary JSON data loaded:', gapSummaryJsonData);
+          } catch (error) {
+            console.error(`Error parsing Gap Summary JSON file ${filename}:`, error);
+          }
+        }
       } else if (lower.startsWith('excel_data/')) {
         // Extract JSON files from excel_data folder
         const jsonText = await zip.files[filename].async('string');
@@ -91,7 +103,8 @@ export async function uploadPolicy(file) {
       gapAnalyses,
       summaryFiles,
       totalScore: scoreData.totalScore,
-      excelJsonData // Include the JSON data in the response
+      excelJsonData, // Include the JSON data in the response
+      gapSummaryJsonData // Include the Gap Summary JSON data in the response
     };
   } catch (error) {
     logger.error('Upload failed', error);

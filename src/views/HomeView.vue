@@ -93,19 +93,32 @@
               <div style="color: #888;">No file selected for preview.</div>
             </div>
           </div>
-          <!-- Show summary files directly when summary tab is active -->
-          <div v-else-if="activeCategory === 'summary' && files.summaryFiles.length > 0" class="summary-content">
-            <div v-for="(file, index) in files.summaryFiles" :key="file.name" class="summary-file">
-              <div v-if="file.name.toLowerCase().endsWith('.pdf') && file.blob" class="pdf-viewer">
-                <PdfViewer :pdfBlob="file.blob" />
-              </div>
-              <div v-else-if="file.name.toLowerCase().endsWith('.docx') && file.blob && file.blob.size > 1000" class="docx-viewer">
-                <DocxViewer :docxBlob="file.blob" />
-              </div>
-              <div v-else class="no-file-viewer">
-                <div style="color: #888;">
-                  {{ file.name }} - {{ file.blob ? 'Processing...' : 'No data available' }}
+          <!-- Show Gap Summary JSON data when available, otherwise show summary files -->
+          <div v-else-if="activeCategory === 'summary'" class="summary-content">
+            <!-- Show Gap Summary JSON data if available -->
+            <div v-if="files.gapSummaryJsonData && files.gapSummaryJsonData.length > 0" class="gap-summary-viewer">
+              <GapSummaryViewer :summaryJsonData="files.gapSummaryJsonData" />
+            </div>
+            <!-- Fallback to showing summary files if no JSON data -->
+            <div v-else-if="files.summaryFiles.length > 0" class="summary-files">
+              <div v-for="(file, index) in files.summaryFiles" :key="file.name" class="summary-file">
+                <div v-if="file.name.toLowerCase().endsWith('.pdf') && file.blob" class="pdf-viewer">
+                  <PdfViewer :pdfBlob="file.blob" />
                 </div>
+                <div v-else-if="file.name.toLowerCase().endsWith('.docx') && file.blob && file.blob.size > 1000" class="docx-viewer">
+                  <DocxViewer :docxBlob="file.blob" />
+                </div>
+                <div v-else class="no-file-viewer">
+                  <div style="color: #888;">
+                    {{ file.name }} - {{ file.blob ? 'Processing...' : 'No data available' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Show message if no summary data available -->
+            <div v-else class="no-summary-data">
+              <div style="color: #888; text-align: center; padding: 40px;">
+                No summary data available
               </div>
             </div>
           </div>
@@ -125,6 +138,7 @@ const props = defineProps({
 import ExcelPreview from '../components/ExcelPreview.vue';
 import PdfViewer from '../components/PdfViewer.vue';
 import DocxViewer from '../components/DocxViewer.vue';
+import GapSummaryViewer from '../components/GapSummaryViewer.vue';
 import DownloadButtons from '../components/DownloadButtons.vue';
 import TabNavigation from '../components/TabNavigation.vue';
 import logger from '../services/logger.js';
@@ -294,6 +308,11 @@ onBeforeMount(async () => {
     if (files.value.excelJsonData) {
       excelJsonData.value = files.value.excelJsonData;
       console.log('Loaded JSON data from ZIP response:', excelJsonData.value);
+    }
+    
+    // Debug: Log Gap Summary JSON data
+    if (files.value.gapSummaryJsonData) {
+      console.log('Gap Summary JSON data found:', files.value.gapSummaryJsonData);
     }
     
     // Debug: Log summary files
@@ -673,6 +692,16 @@ function downloadActive() {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
+}
+
+.gap-summary-viewer {
+  height: 100%;
+  min-height: 400px;
+}
+
+.summary-files {
+  display: flex;
+  flex-direction: column;
 }
 
 .summary-file {
