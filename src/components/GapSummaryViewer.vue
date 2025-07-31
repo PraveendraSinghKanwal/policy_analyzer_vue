@@ -7,9 +7,9 @@
       <div class="summary-layout">
         <!-- Left column: Navigation headings -->
         <div class="navigation-column">
-          <div class="navigation-header">
+          <!-- <div class="navigation-header">
             <h3>Summary Sections</h3>
-          </div>
+          </div> -->
           <div class="navigation-list">
             <button
               v-for="(section, index) in summaryData"
@@ -27,9 +27,9 @@
 
         <!-- Right column: Content -->
         <div class="content-column">
-          <div class="content-header">
+          <!-- <div class="content-header">
             <h2>Gap Analysis Summary</h2>
-          </div>
+          </div> -->
           <div class="content-body" ref="contentBody">
             <div
               v-for="(section, index) in summaryData"

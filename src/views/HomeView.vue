@@ -476,6 +476,8 @@ function downloadActive() {
   --sub-tab-min-width: 20px;
   --sub-tab-default-width: 200px;
   --sub-tab-max-width: 400px;
+  --summary-content-height: 50vh; /* Control summary content height */
+  --summary-content-max-height: 80vh; /* Control max height */
 }
 </style>
 
@@ -690,8 +692,10 @@ function downloadActive() {
 
 .summary-content {
   flex: 1;
+  min-height: var(--summary-content-height);
   padding: 10px;
-  overflow-y: auto;
+  overflow-y: hidden;
+  max-height: var(--summary-content-max-height);
 }
 
 .gap-summary-viewer {
