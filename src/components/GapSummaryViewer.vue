@@ -244,6 +244,7 @@ const formatContent = (content) => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .content-header {
@@ -261,6 +262,7 @@ const formatContent = (content) => {
 
 .content-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 20px;
   background: white;
