@@ -38,6 +38,7 @@
               @change="updateSelectedFiles"
             />
             <img src="/docx_download.jpeg" alt="DOCX" class="checkbox-icon" />
+            <span class="checkbox-label">DOCX</span>
           </label>
           <label class="checkbox-container" v-if="hasPdfFile">
             <input 
@@ -46,6 +47,7 @@
               @change="updateSelectedFiles"
             />
             <img src="/pdf_download.jpg" alt="PDF" class="checkbox-icon" />
+            <span class="checkbox-label">PDF</span>
           </label>
         </div>
       </div>
@@ -287,7 +289,7 @@ async function downloadSummaryFiles() {
 .summary-checkboxes {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0px;
   height: 36px; /* Match button height */
   justify-content: space-between;
 }
@@ -298,8 +300,9 @@ async function downloadSummaryFiles() {
   align-items: center;
   cursor: pointer;
   position: relative;
-  width: 20px;
+  width: 45px;
   height: 16px;
+  gap: 4px;
 }
 
 /* Hide default checkbox */
@@ -313,13 +316,13 @@ async function downloadSummaryFiles() {
 
 /* Custom checkbox styling */
 .checkbox-container input[type="checkbox"]:checked + .checkbox-icon {
-  border: 2px solid #28a745;
-  background-color: #28a745;
+  border: 1px solid rgb(19, 0, 101);
+  background-color: transparent;
   transform: scale(1.1);
 }
 
 .checkbox-container input[type="checkbox"]:not(:checked) + .checkbox-icon {
-  border: 2px solid #ccc;
+  border: 2px solid #e5e4e4;
   background-color: transparent;
 }
 
@@ -333,12 +336,32 @@ async function downloadSummaryFiles() {
   cursor: pointer;
 }
 
+/* Checkbox label styling */
+.checkbox-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6f6f6f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .checkbox-container:hover .checkbox-icon {
   transform: scale(1.05);
-  border-color: #28a745;
+  border-color: #350174;
+}
+
+.checkbox-container:hover .checkbox-label {
+  color: #1e0070;
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkbox-icon {
   box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+}
+
+.checkbox-container input[type="checkbox"]:checked ~ .checkbox-label {
+  color: #090258;
+  font-weight: 700;
 }
 </style> 
