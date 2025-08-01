@@ -13,18 +13,43 @@
         </svg>
         Download Scoring and Gap Analysis
       </button>
-      <button
-        class="btn btn-success download-btn"
-        :disabled="!enabled || !hasSummaryFile"
-        @click="downloadSummaryFile"
-      >
-        <svg class="download-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
-          <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 12L12 18M12 18L9 15M12 18L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Download Gap Summary
-      </button>
+      
+      <!-- Gap Summary section with checkboxes -->
+      <div class="gap-summary-section">
+        <button
+          class="btn btn-success download-btn"
+          :disabled="!enabled || !hasSummaryFile || !hasSelectedSummaryFiles"
+          @click="downloadSummaryFiles"
+        >
+          <svg class="download-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 12L12 18M12 18L9 15M12 18L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Download Gap Summary
+        </button>
+        
+        <!-- Checkboxes container -->
+        <div class="summary-checkboxes">
+          <label class="checkbox-container" v-if="hasDocxFile">
+            <input 
+              type="checkbox" 
+              v-model="selectedSummaryFiles.docx"
+              @change="updateSelectedFiles"
+            />
+            <img src="/docx_download.jpeg" alt="DOCX" class="checkbox-icon" />
+          </label>
+          <label class="checkbox-container" v-if="hasPdfFile">
+            <input 
+              type="checkbox" 
+              v-model="selectedSummaryFiles.pdf"
+              @change="updateSelectedFiles"
+            />
+            <img src="/pdf_download.jpg" alt="PDF" class="checkbox-icon" />
+          </label>
+        </div>
+      </div>
+      
       <div v-if="downloadStatus" class="download-status" :class="downloadStatus.type">
         {{ downloadStatus.message }}
       </div>
@@ -57,6 +82,30 @@ const hasExcelFiles = computed(() => props.gapAnalyses.length > 0);
 const hasSummaryFile = computed(() => props.summaryFiles.length > 0);
 console.log('hasSummaryFile:', hasSummaryFile.value);
 
+// Check if specific file types are available
+const hasDocxFile = computed(() => 
+  props.summaryFiles.some(file => file.name.toLowerCase().endsWith('.docx'))
+);
+const hasPdfFile = computed(() => 
+  props.summaryFiles.some(file => file.name.toLowerCase().endsWith('.pdf'))
+);
+
+// Selected files state
+const selectedSummaryFiles = ref({
+  docx: false,
+  pdf: false
+});
+
+// Check if any summary files are selected
+const hasSelectedSummaryFiles = computed(() => 
+  selectedSummaryFiles.value.docx || selectedSummaryFiles.value.pdf
+);
+
+// Update selected files when checkboxes change
+function updateSelectedFiles() {
+  console.log('Selected summary files:', selectedSummaryFiles.value);
+}
+
 const emit = defineEmits(['download']);
 
 const downloadStatus = ref(null);
@@ -88,30 +137,69 @@ async function downloadExcelFiles() {
   }
 }
 
-function downloadSummaryFile() {
-  console.log('Download Summary File button clicked');
+async function downloadSummaryFiles() {
+  console.log('Download Summary Files button clicked');
   console.log('hasSummaryFile:', hasSummaryFile.value);
-  if (!hasSummaryFile.value) {
-    console.log('No summary file available');
+  console.log('hasSelectedSummaryFiles:', hasSelectedSummaryFiles.value);
+  
+  if (!hasSummaryFile.value || !hasSelectedSummaryFiles.value) {
+    console.log('No summary files selected');
     return;
   }
+  
   try {
-    const file = props.summaryFiles[0];
-    console.log('Attempting to download:', file);
-    const url = URL.createObjectURL(file.blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    downloadStatus.value = { type: 'success', message: 'Gap Summary downloaded!' };
+    downloadStatus.value = { type: 'info', message: 'Preparing download...' };
+    
+    const selectedFiles = [];
+    
+    // Get selected files
+    if (selectedSummaryFiles.value.docx) {
+      const docxFile = props.summaryFiles.find(file => file.name.toLowerCase().endsWith('.docx'));
+      if (docxFile) selectedFiles.push(docxFile);
+    }
+    
+    if (selectedSummaryFiles.value.pdf) {
+      const pdfFile = props.summaryFiles.find(file => file.name.toLowerCase().endsWith('.pdf'));
+      if (pdfFile) selectedFiles.push(pdfFile);
+    }
+    
+    console.log('Selected files to download:', selectedFiles);
+    
+    if (selectedFiles.length === 1) {
+      // Download single file
+      const file = selectedFiles[0];
+      const url = URL.createObjectURL(file.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      downloadStatus.value = { type: 'success', message: `${file.name} downloaded!` };
+    } else if (selectedFiles.length > 1) {
+      // Download multiple files as ZIP
+      const zip = new JSZip();
+      for (const file of selectedFiles) {
+        zip.file(file.name, file.blob);
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gap_summary_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      downloadStatus.value = { type: 'success', message: 'Gap Summary files downloaded!' };
+    }
+    
     setTimeout(() => { downloadStatus.value = null; }, 3000);
     emit('download');
   } catch (error) {
     console.error('Download error:', error);
-    downloadStatus.value = { type: 'error', message: 'Error downloading summary file.' };
+    downloadStatus.value = { type: 'error', message: 'Error downloading summary files.' };
     setTimeout(() => { downloadStatus.value = null; }, 5000);
   }
 }
@@ -186,5 +274,71 @@ function downloadSummaryFile() {
 .download-icon {
   flex-shrink: 0;
   stroke: currentColor;
+}
+
+/* Gap Summary section styling */
+.gap-summary-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Checkboxes container */
+.summary-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 36px; /* Match button height */
+  justify-content: space-between;
+}
+
+/* Checkbox container */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  width: 20px;
+  height: 16px;
+}
+
+/* Hide default checkbox */
+.checkbox-container input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Custom checkbox styling */
+.checkbox-container input[type="checkbox"]:checked + .checkbox-icon {
+  border: 2px solid #28a745;
+  background-color: #28a745;
+  transform: scale(1.1);
+}
+
+.checkbox-container input[type="checkbox"]:not(:checked) + .checkbox-icon {
+  border: 2px solid #ccc;
+  background-color: transparent;
+}
+
+/* Checkbox icon styling */
+.checkbox-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.checkbox-container:hover .checkbox-icon {
+  transform: scale(1.05);
+  border-color: #28a745;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkbox-icon {
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
 }
 </style> 
