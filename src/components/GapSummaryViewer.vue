@@ -6,7 +6,7 @@
       <!-- Two-column layout -->
       <div class="summary-layout">
         <!-- Left column: Navigation headings -->
-        <div class="navigation-column">
+        <div class="navigation-column" ref="navigationColumn">
           <!-- <div class="navigation-header">
             <h3>Summary Sections</h3>
           </div> -->
@@ -24,6 +24,13 @@
             </button>
           </div>
         </div>
+
+        <!-- Resizable divider -->
+        <div 
+          class="resize-handle"
+          @mousedown="startResize"
+          @touchstart="startResize"
+        ></div>
 
         <!-- Right column: Content -->
         <div class="content-column">
@@ -49,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue';
 
 const props = defineProps({
   summaryJsonData: {
@@ -63,6 +70,79 @@ const loading = ref(false);
 const error = ref(null);
 const activeSection = ref(0);
 const contentBody = ref(null);
+const navigationColumn = ref(null);
+const isResizing = ref(false);
+
+// Computed property that reads the CSS variable directly for default width
+const defaultNavigationWidth = computed(() => {
+  const defaultWidth = getComputedStyle(document.documentElement)
+    .getPropertyValue('--nav-default-width')
+    .trim();
+  
+  // Convert CSS value to number (remove 'px' and convert to number)
+  const widthValue = parseInt(defaultWidth);
+  return !isNaN(widthValue) ? widthValue : 250; // fallback to 250 if invalid
+});
+
+// Computed property for min width from CSS variable
+const minNavigationWidth = computed(() => {
+  const minWidth = getComputedStyle(document.documentElement)
+    .getPropertyValue('--nav-min-width')
+    .trim();
+  
+  const widthValue = parseInt(minWidth);
+  return !isNaN(widthValue) ? widthValue : 150; // fallback to 150 if invalid
+});
+
+// Computed property for max width from CSS variable
+const maxNavigationWidth = computed(() => {
+  const maxWidth = getComputedStyle(document.documentElement)
+    .getPropertyValue('--nav-max-width')
+    .trim();
+  
+  const widthValue = parseInt(maxWidth);
+  return !isNaN(widthValue) ? widthValue : 400; // fallback to 400 if invalid
+});
+
+// Resize functionality
+const startResize = (event) => {
+  isResizing.value = true;
+  event.preventDefault();
+  
+  const handleMouseMove = (e) => {
+    if (!isResizing.value) return;
+    
+    const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
+    if (clientX && navigationColumn.value) {
+      // Apply constraints from CSS variables
+      const constrainedWidth = Math.max(
+        minNavigationWidth.value, 
+        Math.min(maxNavigationWidth.value, clientX)
+      );
+      
+      // Update the CSS variable directly
+      document.documentElement.style.setProperty('--nav-default-width', `${constrainedWidth}px`);
+    }
+  };
+  
+  const handleMouseUp = () => {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('touchmove', handleMouseMove);
+    document.removeEventListener('touchend', handleMouseUp);
+  };
+  
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('touchmove', handleMouseMove);
+  document.addEventListener('touchend', handleMouseUp);
+};
+
+// Clean up event listeners on component unmount
+onUnmounted(() => {
+  isResizing.value = false;
+});
 
 // Watch for changes in the summary JSON data
 watch(() => props.summaryJsonData, async (newData) => {
@@ -140,9 +220,20 @@ const formatContent = (content) => {
     .replace(/^/, '<p>')
     .replace(/$/, '</p>');
 };
+
+
 </script>
 
+<style>
+:root {
+  --nav-default-width: 200px;  /* Default width - change this to control default */
+  --nav-min-width: 20px;      /* Minimum width - change this to control minimum */
+  --nav-max-width: 500px;      /* Maximum width - change this to control maximum */
+}
+</style>
+
 <style scoped>
+
 .gap-summary-viewer {
   width: 100%;
   height: 100%;
@@ -180,13 +271,15 @@ const formatContent = (content) => {
 
 /* Left Column - Navigation */
 .navigation-column {
-  width: 250px;
-  min-width: 200px;
-  max-width: 300px;
+  width: var(--nav-default-width);    /* Default width from CSS variable */
+  min-width: var(--nav-min-width);    /* Minimum width from CSS variable */
+  max-width: var(--nav-max-width);    /* Maximum width from CSS variable */
   background: #f8f9fa;
   border-right: 1px solid #e9ecef;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  position: relative; /* For resize handle positioning */
 }
 
 .navigation-header {
@@ -329,6 +422,36 @@ const formatContent = (content) => {
   font-style: italic;
 }
 
+/* Resize Handle */
+.resize-handle {
+  width: 6px;
+  background: #ffffff;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover {
+  background: #1976d2;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 20px;
+  background: #adb5bd;
+  border-radius: 1px;
+}
+
+.resize-handle:hover::after {
+  background: white;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .summary-layout {
@@ -336,11 +459,15 @@ const formatContent = (content) => {
   }
   
   .navigation-column {
-    width: 100%;
+    width: 100% !important;
     max-width: none;
     height: 200px;
     border-right: none;
     border-bottom: 1px solid #e9ecef;
+  }
+  
+  .resize-handle {
+    display: none;
   }
   
   .navigation-list {
