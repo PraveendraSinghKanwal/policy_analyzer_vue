@@ -56,18 +56,33 @@
              }">
           <div class="resize-handle" @mousedown="startResize"></div>
           <div class="sub-tabs-container">
-            <button
+            <div
               v-for="(file, index) in scoreData.gapAnalyses"
               :key="file.name"
-              :class="{ 
-                'vertical-sub-tab': true,
-                'active': isFileActive(file, activeCategory)
-              }"
-              @click="selectFile(file, activeCategory)"
+              class="vertical-sub-tab-container"
             >
-              {{ getDisplayName(file.name) }}
-              <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
-            </button>
+              <button
+                :class="{ 
+                  'vertical-sub-tab': true,
+                  'active': isFileActive(file, activeCategory)
+                }"
+                @click="selectFile(file, activeCategory)"
+              >
+                <span class="file-name">{{ getDisplayName(file.name) }}</span>
+                <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
+              </button>
+              <!-- Navigation button for Gap Summary -->
+              <button
+                v-if="activeCategory === 'summary'"
+                class="nav-to-summary-btn"
+                @click.stop="scrollToFileSection(file)"
+                title="View this file's summary section"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -77,7 +92,11 @@
           <div v-if="activeCategory === 'summary'" class="summary-content">
             <!-- Show Gap Summary JSON data if available -->
             <div v-if="files.gapSummaryJsonData && files.gapSummaryJsonData.length > 0" class="gap-summary-viewer">
-              <GapSummaryViewer :summaryJsonData="files.gapSummaryJsonData" :combinedView="true" />
+              <GapSummaryViewer 
+                :summaryJsonData="files.gapSummaryJsonData" 
+                :combinedView="true"
+                :useTwoColumnLayout="true"
+              />
             </div>
             <!-- Fallback to showing summary files if no JSON data -->
             <div v-else-if="files.summaryFiles.length > 0" class="summary-files">
@@ -491,6 +510,35 @@ function updateSubTabConstraints(minWidth = 20, maxWidth = 400, defaultWidth = 5
 function downloadActive() {
   // This function is now handled by the DownloadButtons component
 }
+
+// Function to scroll to a specific file's section in the Gap Summary Viewer
+function scrollToFileSection(file) {
+  const gapSummaryViewer = document.querySelector('.gap-summary-viewer');
+  if (gapSummaryViewer) {
+    // Try to find section by data-file-name attribute
+    const fileElement = gapSummaryViewer.querySelector(`[data-file-name="${file.name}"]`);
+    if (fileElement) {
+      fileElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Add highlight effect
+      fileElement.classList.add('highlighted');
+      setTimeout(() => {
+        fileElement.classList.remove('highlighted');
+      }, 2000);
+    } else {
+      console.warn(`No section found for file: ${file.name}`);
+      // Try to find by partial match
+      const fileNameWithoutExt = file.name.replace(/\.(xlsx|xls)$/i, '');
+      const partialMatch = gapSummaryViewer.querySelector(`[data-file-name*="${fileNameWithoutExt}"]`);
+      if (partialMatch) {
+        partialMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        partialMatch.classList.add('highlighted');
+        setTimeout(() => {
+          partialMatch.classList.remove('highlighted');
+        }, 2000);
+      }
+    }
+  }
+}
 </script>
 
 <style>
@@ -658,8 +706,11 @@ function downloadActive() {
   overflow-y: auto;
 }
 
-.vertical-sub-tab {
-  padding: 12px 16px;
+.vertical-sub-tab-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
   background: white;
   border: none;
   border-left: 3px solid transparent;
@@ -669,6 +720,32 @@ function downloadActive() {
   transition: all 0.2s ease;
   text-align: left;
   font-weight: 500;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vertical-sub-tab-container:hover {
+  background: #f5f5f5;
+}
+
+.vertical-sub-tab-container.active {
+  border-left-color: #020651;
+  background: #f8f9fa;
+}
+
+.vertical-sub-tab {
+  flex: 1;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-weight: inherit;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -678,16 +755,31 @@ function downloadActive() {
   text-overflow: ellipsis;
 }
 
-.vertical-sub-tab:hover:not(:disabled) {
-  background: #f5f5f5;
+.vertical-sub-tab:hover {
   color: #1976d2;
 }
 
 .vertical-sub-tab.active {
   color: #0c0e4e;
-  border-left-color: #020651;
-  background: #f8f9fa;
   font-weight: 600;
+}
+
+.nav-to-summary-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; /* Adjust size as needed */
+  height: 24px; /* Adjust size as needed */
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.nav-to-summary-btn:hover {
+  color: #1976d2;
 }
 
 .preview-area {

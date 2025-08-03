@@ -4,16 +4,60 @@
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="summaryData && summaryData.length > 0" class="summary-container">
       <!-- Combined view (for main tab) -->
-      <div v-if="combinedView" class="combined-view">
+      <div v-if="combinedView && !useTwoColumnLayout" class="combined-view">
         <div class="content-body" ref="contentBody">
           <div
             v-for="(section, index) in summaryData"
             :key="index"
             :id="`section-${index}`"
             class="summary-section"
+            :data-file-name="getFileSectionName(section)"
           >
             <h3 class="section-title">{{ section.title }}</h3>
             <div class="section-content" v-html="formatContent(section.content)"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Two-column layout (for main tab with navigation) -->
+      <div v-else-if="combinedView && useTwoColumnLayout" class="summary-layout">
+        <!-- Left column: Navigation headings -->
+        <div class="navigation-column" ref="navigationColumn">
+          <div class="navigation-list">
+            <button
+              v-for="(section, index) in summaryData"
+              :key="index"
+              :class="{ 
+                'nav-item': true,
+                'active': activeSection === index 
+              }"
+              @click="scrollToSection(index)"
+            >
+              {{ section.title }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Resizable divider -->
+        <div 
+          class="resize-handle"
+          @mousedown="startResize"
+          @touchstart="startResize"
+        ></div>
+
+        <!-- Right column: Content -->
+        <div class="content-column">
+          <div class="content-body" ref="contentBody">
+            <div
+              v-for="(section, index) in summaryData"
+              :key="index"
+              :id="`section-${index}`"
+              class="summary-section"
+              :data-file-name="getFileSectionName(section)"
+            >
+              <h3 class="section-title">{{ section.title }}</h3>
+              <div class="section-content" v-html="formatContent(section.content)"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +123,10 @@ const props = defineProps({
     default: () => []
   },
   combinedView: {
+    type: Boolean,
+    default: false
+  },
+  useTwoColumnLayout: {
     type: Boolean,
     default: false
   }
@@ -238,6 +286,31 @@ const formatContent = (content) => {
     .replace(/\n/g, '<br>')
     .replace(/^/, '<p>')
     .replace(/$/, '</p>');
+};
+
+// Function to get the file section name from a summary item
+const getFileSectionName = (section) => {
+  // Map section titles to file names based on the gap summary structure
+  const titleToFileMap = {
+    'Air Travel Analysis': 'Air_Travel.xlsx',
+    'Ground Transportation': 'Ground_Transportation.xlsx',
+    'Hotel Accommodations': 'Hotel_Lodging.xlsx',
+    'Expense Management': 'Expense_Management.xlsx',
+    'Risk Management': 'Risk_Management.xlsx',
+    'Sustainability': 'Sustainability.xlsx',
+    'Technology and Digital Tools': 'Technology.xlsx',
+    'Compliance and Governance': 'Compliance.xlsx'
+  };
+  
+  // Try to find a match in the title
+  for (const [title, fileName] of Object.entries(titleToFileMap)) {
+    if (section.title.includes(title)) {
+      return fileName;
+    }
+  }
+  
+  // Fallback: try to extract from title
+  return section.title.split(' ')[0] + '.xlsx';
 };
 
 
