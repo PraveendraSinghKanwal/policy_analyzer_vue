@@ -62,26 +62,25 @@
               class="vertical-sub-tab-container"
             >
               <button
-                :class="{ 
-                  'vertical-sub-tab': true,
+              :class="{ 
+                'vertical-sub-tab': true,
                   'active': isFileActive(file, activeCategory)
-                }"
+              }"
                 @click="selectFile(file, activeCategory)"
-              >
+            >
                 <span class="file-name">{{ getDisplayName(file.name) }}</span>
-                <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
-              </button>
-              <!-- Navigation button for Gap Summary -->
-              <button
-                v-if="activeCategory === 'summary'"
-                class="nav-to-summary-btn"
-                @click.stop="scrollToFileSection(file)"
-                title="View this file's summary section"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </button>
+              <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
+            </button>
+                             <!-- Navigation button for Gap Summary -->
+               <button
+                 class="nav-to-summary-btn"
+                 @click.stop="scrollToFileSection(file)"
+                 title="View this file's summary section"
+               >
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <path d="M9 18l6-6-6-6"/>
+                 </svg>
+               </button>
             </div>
           </div>
         </div>
@@ -130,7 +129,7 @@
                 :jsonData="activeFileJsonData" 
                 :currentFileName="activeFile.file.name" 
               />
-            </div>
+        </div>
             <div v-else class="no-file-viewer">
               <div style="color: #888;">No file selected for preview.</div>
             </div>
@@ -602,6 +601,16 @@ function downloadActive() {
 
 // Function to scroll to a specific file's section in the Gap Summary Viewer
 function scrollToFileSection(file) {
+  // If we're not in the summary tab, switch to it first
+  if (activeCategory.value !== 'summary') {
+    activeCategory.value = 'summary';
+    // Wait for the DOM to update before trying to scroll
+    nextTick(() => {
+      scrollToFileSection(file);
+    });
+    return;
+  }
+  
   const gapSummaryViewer = document.querySelector('.gap-summary-viewer');
   if (gapSummaryViewer) {
     // Try to find section by data-file-name attribute
@@ -641,7 +650,7 @@ function scrollToFileSection(file) {
 <style>
 :root {
   --sub-tab-min-width: 20px;
-  --sub-tab-default-width: 200px;
+  --sub-tab-default-width: 230px;
   --sub-tab-max-width: 400px;
   --summary-content-height: 70vh; /* Control summary content height */
   --summary-content-max-height: 70vh; /* Control max height */
@@ -930,7 +939,7 @@ function scrollToFileSection(file) {
   font-size: 12px;
   color: #666;
   margin-bottom: 0px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .excel-viewer,
