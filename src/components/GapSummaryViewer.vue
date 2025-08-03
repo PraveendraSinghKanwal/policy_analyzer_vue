@@ -3,8 +3,23 @@
     <div v-if="loading" class="loading">Loading Gap Summary...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else-if="summaryData && summaryData.length > 0" class="summary-container">
-      <!-- Two-column layout -->
-      <div class="summary-layout">
+      <!-- Combined view (for main tab) -->
+      <div v-if="combinedView" class="combined-view">
+        <div class="content-body" ref="contentBody">
+          <div
+            v-for="(section, index) in summaryData"
+            :key="index"
+            :id="`section-${index}`"
+            class="summary-section"
+          >
+            <h3 class="section-title">{{ section.title }}</h3>
+            <div class="section-content" v-html="formatContent(section.content)"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Two-column layout (for standalone use) -->
+      <div v-else class="summary-layout">
         <!-- Left column: Navigation headings -->
         <div class="navigation-column" ref="navigationColumn">
           <!-- <div class="navigation-header">
@@ -62,6 +77,10 @@ const props = defineProps({
   summaryJsonData: {
     type: Array,
     default: () => []
+  },
+  combinedView: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -257,6 +276,26 @@ const formatContent = (content) => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Combined view styles */
+.combined-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.combined-view .content-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  background: white;
 }
 
 .summary-layout {

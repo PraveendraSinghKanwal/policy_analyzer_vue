@@ -36,6 +36,7 @@ export async function uploadPolicy(file) {
       if (filename.toLowerCase() === 'score.json') {
         const jsonText = await zip.files[filename].async('string');
         scoreData = JSON.parse(jsonText);
+        console.log('Score data loaded:', scoreData);
         break;
       }
     }
@@ -53,7 +54,7 @@ export async function uploadPolicy(file) {
       
       if (lower.startsWith('analysis/')) {
         const blob = await zip.files[filename].async('blob');
-        // Find score for this file
+        // Find score for this file from score.json
         let score = undefined;
         if (scoreData.gapAnalyses) {
           const scoreEntry = scoreData.gapAnalyses.find(f => f.name === filename.split('/').pop());
@@ -103,6 +104,7 @@ export async function uploadPolicy(file) {
       gapAnalyses,
       summaryFiles,
       totalScore: scoreData.totalScore,
+      scoreData, // Include the complete score data from score.json
       excelJsonData, // Include the JSON data in the response
       gapSummaryJsonData // Include the Gap Summary JSON data in the response
     };

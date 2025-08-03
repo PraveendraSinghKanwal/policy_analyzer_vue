@@ -47,8 +47,8 @@
 
       <!-- Content Area with Vertical Sub-tabs and Preview -->
       <div class="content-area">
-        <!-- Vertical Sub-tabs (only for gap analysis) -->
-        <div v-if="activeCategory === 'gap' && sortedGapAnalyses.length > 0" 
+        <!-- Vertical Sub-tabs (for both summary and gap analysis) -->
+        <div v-if="scoreData.gapAnalyses && scoreData.gapAnalyses.length > 0" 
              class="vertical-sub-tabs" 
              :style="{ 
                '--sub-tab-width': subTabWidth + 'px',
@@ -57,13 +57,13 @@
           <div class="resize-handle" @mousedown="startResize"></div>
           <div class="sub-tabs-container">
             <button
-              v-for="(file, index) in sortedGapAnalyses"
+              v-for="(file, index) in scoreData.gapAnalyses"
               :key="file.name"
               :class="{ 
                 'vertical-sub-tab': true,
-                'active': isFileActive(file, 'gap')
+                'active': isFileActive(file, activeCategory)
               }"
-              @click="selectFile(file, 'gap')"
+              @click="selectFile(file, activeCategory)"
             >
               {{ getDisplayName(file.name) }}
               <span v-if="file.score !== undefined" class="score-badge">({{ file.score }}%)</span>
@@ -73,31 +73,11 @@
 
         <!-- Content Preview Area -->
         <div class="preview-area">
-          <div v-if="activeFile" class="preview-content">
-            <!-- Excel Preview -->
-            <div v-if="activeFile.type === 'gap'" class="excel-viewer">
-              <ExcelPreview 
-                :jsonData="activeFileJsonData" 
-                :currentFileName="activeFile.file.name" 
-              />
-            </div>
-            <!-- PDF Preview -->
-            <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.pdf')" class="pdf-viewer">
-              <PdfViewer :pdfBlob="activeFile.file.blob" />
-            </div>
-            <!-- DOCX Preview -->
-            <div v-else-if="activeFile.type === 'summary' && activeFile.file.name && activeFile.file.name.toLowerCase().endsWith('.docx')" class="docx-viewer">
-              <DocxViewer :docxBlob="activeFile.file.blob" />
-            </div>
-            <div v-else class="no-file-viewer">
-              <div style="color: #888;">No file selected for preview.</div>
-            </div>
-          </div>
-          <!-- Show Gap Summary JSON data when available, otherwise show summary files -->
-          <div v-else-if="activeCategory === 'summary'" class="summary-content">
+          <!-- Gap Summary Content -->
+          <div v-if="activeCategory === 'summary'" class="summary-content">
             <!-- Show Gap Summary JSON data if available -->
             <div v-if="files.gapSummaryJsonData && files.gapSummaryJsonData.length > 0" class="gap-summary-viewer">
-              <GapSummaryViewer :summaryJsonData="files.gapSummaryJsonData" />
+              <GapSummaryViewer :summaryJsonData="files.gapSummaryJsonData" :combinedView="true" />
             </div>
             <!-- Fallback to showing summary files if no JSON data -->
             <div v-else-if="files.summaryFiles.length > 0" class="summary-files">
@@ -121,6 +101,23 @@
                 No summary data available
               </div>
             </div>
+          </div>
+
+          <!-- Content Extraction Preview -->
+          <div v-else-if="activeCategory === 'gap' && activeFile" class="preview-content">
+            <!-- Excel Preview -->
+            <div v-if="activeFile.type === 'gap'" class="excel-viewer">
+              <ExcelPreview 
+                :jsonData="activeFileJsonData" 
+                :currentFileName="activeFile.file.name" 
+              />
+            </div>
+            <div v-else class="no-file-viewer">
+              <div style="color: #888;">No file selected for preview.</div>
+            </div>
+          </div>
+          <div v-else-if="activeCategory === 'gap'" class="no-file-viewer">
+            <div style="color: #888;">No file selected for preview.</div>
           </div>
         </div>
       </div>
@@ -155,45 +152,27 @@ const isError = computed(() => status.value.toLowerCase().includes('fail'));
 // Get category sequence from environment or fallback to default
 const categorySequence = computed(() => getCategorySequenceFromEnv());
 
-// Computed property for sorted gap analyses based on sequence
-const sortedGapAnalyses = computed(() => {
-  if (!files.value?.gapAnalyses) return [];
+// Computed property for score data from files
+const scoreData = computed(() => {
+  if (!files.value) return { gapAnalyses: [], totalScore: undefined };
   
-  // If no sequence is defined, return original order
-  if (!categorySequence.value || categorySequence.value.length === 0) {
-    return [...files.value.gapAnalyses];
+  // If we have score data from the API response, use it
+  if (files.value.scoreData) {
+    return files.value.scoreData;
   }
   
-  return [...files.value.gapAnalyses].sort((a, b) => {
-    // Get the original filename without extension for better matching
-    const aFileName = a.name.replace(/\.(xlsx|xls)$/i, '');
-    const bFileName = b.name.replace(/\.(xlsx|xls)$/i, '');
-    
-    // Try to match against the sequence
-    const aIndex = categorySequence.value.findIndex(category => {
-      const categoryNormalized = category.toLowerCase().replace(/[&_]/g, '');
-      const fileNameNormalized = aFileName.toLowerCase().replace(/[&_]/g, '');
-      return fileNameNormalized.includes(categoryNormalized) || categoryNormalized.includes(fileNameNormalized);
-    });
-    
-    const bIndex = categorySequence.value.findIndex(category => {
-      const categoryNormalized = category.toLowerCase().replace(/[&_]/g, '');
-      const fileNameNormalized = bFileName.toLowerCase().replace(/[&_]/g, '');
-      return fileNameNormalized.includes(categoryNormalized) || categoryNormalized.includes(fileNameNormalized);
-    });
-    
-    // If both found in sequence, sort by sequence order
-    if (aIndex !== -1 && bIndex !== -1) {
-      return aIndex - bIndex;
-    }
-    
-    // If only one found in sequence, prioritize it
-    if (aIndex !== -1) return -1;
-    if (bIndex !== -1) return 1;
-    
-    // If neither found in sequence, maintain original order
-    return 0;
-  });
+  // Fallback: create score data from gapAnalyses if available
+  if (files.value.gapAnalyses && files.value.gapAnalyses.length > 0) {
+    return {
+      gapAnalyses: files.value.gapAnalyses.map(file => ({
+        name: file.name,
+        score: file.score || 0
+      })),
+      totalScore: files.value.totalScore
+    };
+  }
+  
+  return { gapAnalyses: [], totalScore: undefined };
 });
 
 // Computed property to get JSON data for the active file
@@ -334,12 +313,14 @@ onBeforeMount(async () => {
     if (Array.isArray(files.value.summaryFiles) && files.value.summaryFiles.length > 0) {
       activeCategory.value = 'summary';
       activeFile.value = null; // Summary shows all files directly
-    } else if (Array.isArray(files.value.gapAnalyses) && files.value.gapAnalyses.length > 0) {
+    } else if (scoreData.value.gapAnalyses && scoreData.value.gapAnalyses.length > 0) {
       activeCategory.value = 'gap';
-      // Use sorted array for initial selection
+      // Use first file from score.json for initial selection
       nextTick(() => {
-        if (sortedGapAnalyses.value.length > 0) {
-          activeFile.value = { type: 'gap', file: sortedGapAnalyses.value[0] };
+        if (scoreData.value.gapAnalyses.length > 0) {
+          const firstScoreFile = scoreData.value.gapAnalyses[0];
+          const actualFile = findMatchingFile(firstScoreFile);
+          activeFile.value = { type: 'gap', file: actualFile };
         }
       });
     }
@@ -374,25 +355,66 @@ onMounted(() => {
 function selectMainTab(category) {
   activeCategory.value = category;
   
-  if (category === 'gap' && sortedGapAnalyses.value.length > 0) {
-    // Auto-select first file in gap analysis (now sorted)
-    selectFile(sortedGapAnalyses.value[0], 'gap');
+  if (category === 'gap' && scoreData.value.gapAnalyses.length > 0) {
+    // Auto-select first file in gap analysis
+    const firstScoreFile = scoreData.value.gapAnalyses[0];
+    const actualFile = findMatchingFile(firstScoreFile);
+    activeFile.value = { type: 'gap', file: actualFile };
   } else if (category === 'summary') {
     // Clear active file for summary tab
     activeFile.value = null;
   }
 }
 
+// Helper function to find the actual file from gapAnalyses that matches a score.json entry
+function findMatchingFile(scoreFile) {
+  if (!files.value?.gapAnalyses) return scoreFile;
+  
+  // Try to find exact match first
+  const exactMatch = files.value.gapAnalyses.find(gapFile => gapFile.name === scoreFile.name);
+  if (exactMatch) return exactMatch;
+  
+  // Try to find match without extension
+  const scoreFileNameWithoutExt = scoreFile.name.replace(/\.(xlsx|xls)$/i, '');
+  const matchWithoutExt = files.value.gapAnalyses.find(gapFile => {
+    const gapFileNameWithoutExt = gapFile.name.replace(/\.(xlsx|xls)$/i, '');
+    return gapFileNameWithoutExt === scoreFileNameWithoutExt;
+  });
+  if (matchWithoutExt) return matchWithoutExt;
+  
+  // Return the score file if no match found
+  return scoreFile;
+}
+
 // File selection from vertical sub-tabs
 function selectFile(file, category) {
-  activeFile.value = { type: category, file };
+  // If we're in summary tab and user clicks a file, switch to gap tab
+  if (activeCategory.value === 'summary' && category === 'summary') {
+    activeCategory.value = 'gap';
+    const actualFile = findMatchingFile(file);
+    activeFile.value = { type: 'gap', file: actualFile };
+  } else {
+    const actualFile = findMatchingFile(file);
+    activeFile.value = { type: category, file: actualFile };
+  }
 }
 
 // Check if file is active
 function isFileActive(file, category) {
-  return activeFile.value && 
-         activeFile.value.type === category && 
-         activeFile.value.file.name === file.name;
+  if (!activeFile.value || activeFile.value.type !== category) return false;
+  
+  // Compare file names (with and without extensions)
+  const activeFileName = activeFile.value.file.name;
+  const fileFileName = file.name;
+  
+  // Exact match
+  if (activeFileName === fileFileName) return true;
+  
+  // Match without extensions
+  const activeFileNameWithoutExt = activeFileName.replace(/\.(xlsx|xls)$/i, '');
+  const fileFileNameWithoutExt = fileFileName.replace(/\.(xlsx|xls)$/i, '');
+  
+  return activeFileNameWithoutExt === fileFileNameWithoutExt;
 }
 
 // Get display name for files
