@@ -290,7 +290,7 @@ const formatContent = (content) => {
 
 // Function to get the file section name from a summary item
 const getFileSectionName = (section) => {
-  // Map section titles to file names based on the gap summary structure
+  // Enhanced mapping with more comprehensive title-to-file mapping
   const titleToFileMap = {
     'Air Travel Analysis': 'Air_Travel.xlsx',
     'Ground Transportation': 'Ground_Transportation.xlsx',
@@ -299,18 +299,72 @@ const getFileSectionName = (section) => {
     'Risk Management': 'Risk_Management.xlsx',
     'Sustainability': 'Sustainability.xlsx',
     'Technology and Digital Tools': 'Technology.xlsx',
-    'Compliance and Governance': 'Compliance.xlsx'
+    'Compliance and Governance': 'Compliance.xlsx',
+    'Group & Event Travel': 'Group_&_Event_Travel.xlsx',
+    'Meals & Entertainment': 'Meals_&_Entertainment.xlsx',
+    'Overview & Guidelines': 'Overview_&_Guidelines.xlsx',
+    'Travel Arrangements': 'Travel_Arrangements.xlsx',
+    'Wellbeing': 'Wellbeing.xlsx',
+    'Group & Events Travel': 'Group_&_Events_Travel.xlsx'
   };
-  
-  // Try to find a match in the title
+
+  const sectionTitle = section.title.toLowerCase();
+
+  // Try exact title match first (most specific)
   for (const [title, fileName] of Object.entries(titleToFileMap)) {
-    if (section.title.includes(title)) {
+    if (sectionTitle.includes(title.toLowerCase())) {
       return fileName;
     }
   }
+
+  // Try more specific word matching to avoid conflicts
+  const specificWords = {
+    'air travel': 'Air_Travel.xlsx',
+    'ground transport': 'Ground_Transportation.xlsx',
+    'transportation': 'Ground_Transportation.xlsx',
+    'hotel': 'Hotel_Lodging.xlsx',
+    'lodging': 'Hotel_Lodging.xlsx',
+    'expense': 'Expense_Management.xlsx',
+    'expenses': 'Expense_Management.xlsx',
+    'risk': 'Risk_Management.xlsx',
+    'sustainability': 'Sustainability.xlsx',
+    'technology': 'Technology.xlsx',
+    'digital': 'Technology.xlsx',
+    'compliance': 'Compliance.xlsx',
+    'governance': 'Compliance.xlsx',
+    'group travel': 'Group_&_Events_Travel.xlsx',
+    'events': 'Group_&_Events_Travel.xlsx',
+    'meals': 'Meals_&_Entertainment.xlsx',
+    'entertainment': 'Meals_&_Entertainment.xlsx',
+    'overview': 'Overview_&_Guidelines.xlsx',
+    'guidelines': 'Overview_&_Guidelines.xlsx',
+    'arrangements': 'Travel_Arrangements.xlsx',
+    'wellbeing': 'Wellbeing.xlsx'
+  };
+
+  // Try specific word matches first
+  for (const [word, fileName] of Object.entries(specificWords)) {
+    if (sectionTitle.includes(word)) {
+      return fileName;
+    }
+  }
+
+  // For sections that don't have file matches, return a fallback
+  // This ensures the data-file-name attribute is always set
+  const nonFileSections = [
+    'introduction',
+    'methodology', 
+    'executive summary',
+    'technology and digital tools',
+    'compliance and governance',
+    'recommendations and next steps'
+  ];
   
-  // Fallback: try to extract from title
-  return section.title.split(' ')[0] + '.xlsx';
+  if (nonFileSections.some(nonFileSection => sectionTitle.includes(nonFileSection))) {
+    return `section_${section.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  }
+
+  return section.title.split(' ')[0] + '.xlsx'; // Fallback
 };
 
 

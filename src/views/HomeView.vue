@@ -91,11 +91,11 @@
           <!-- Gap Summary Content -->
           <div v-if="activeCategory === 'summary'" class="summary-content">
             <!-- Show Gap Summary JSON data if available -->
-            <div v-if="files.gapSummaryJsonData && files.gapSummaryJsonData.length > 0" class="gap-summary-viewer">
+            <div v-if="reorderedSummaryData && reorderedSummaryData.length > 0" class="gap-summary-viewer">
               <GapSummaryViewer 
-                :summaryJsonData="files.gapSummaryJsonData" 
+                :summaryJsonData="reorderedSummaryData" 
                 :combinedView="true"
-                :useTwoColumnLayout="true"
+                :useTwoColumnLayout="false"
               />
             </div>
             <!-- Fallback to showing summary files if no JSON data -->
@@ -232,6 +232,168 @@ const activeFileJsonData = computed(() => {
   return null;
 });
 
+// Computed property to reorder summary sections based on score.json sequence
+const reorderedSummaryData = computed(() => {
+  if (!files.value?.gapSummaryJsonData || !scoreData.value.gapAnalyses) {
+    return files.value?.gapSummaryJsonData || [];
+  }
+  
+  const summarySections = files.value.gapSummaryJsonData;
+  const scoreFiles = scoreData.value.gapAnalyses;
+  
+  // Create a map of file names to their sections with improved matching
+  const sectionMap = new Map();
+  const unmatchedSections = [];
+  
+  // First pass: try to match sections to score files
+  summarySections.forEach(section => {
+    const matchedFileName = findBestFileMatch(section, scoreFiles);
+    if (matchedFileName) {
+      sectionMap.set(matchedFileName, section);
+    } else {
+      unmatchedSections.push(section);
+    }
+  });
+  
+  // Reorder sections based on score.json sequence
+  const reorderedSections = [];
+  scoreFiles.forEach(scoreFile => {
+    const section = sectionMap.get(scoreFile.name);
+    if (section) {
+      reorderedSections.push(section);
+    }
+  });
+  
+  // Add any remaining unmatched sections at the end in their original order
+  reorderedSections.push(...unmatchedSections);
+  
+  // Verify we have all original sections
+  if (reorderedSections.length !== summarySections.length) {
+    // Return original data as fallback
+    return summarySections;
+  }
+  
+  return reorderedSections;
+});
+
+// Enhanced function to find the best file match for a section
+function findBestFileMatch(section, scoreFiles) {
+  const sectionTitle = section.title.toLowerCase();
+  
+  // First, try exact title-to-file mapping with more specific matches
+  const titleToFileMap = {
+    'air travel analysis': 'Air_Travel.xlsx',
+    'ground transportation': 'Ground_Transportation.xlsx',
+    'hotel accommodations': 'Hotel_Lodging.xlsx',
+    'expense management': 'Expense_Management.xlsx',
+    'risk management': 'Risk_Management.xlsx',
+    'sustainability': 'Sustainability.xlsx',
+    'technology and digital tools': 'Technology.xlsx',
+    'compliance and governance': 'Compliance.xlsx',
+    'group & event travel': 'Group_&_Event_Travel.xlsx',
+    'meals & entertainment': 'Meals_&_Entertainment.xlsx',
+    'overview & guidelines': 'Overview_&_Guidelines.xlsx',
+    'travel arrangements': 'Travel_Arrangements.xlsx',
+    'wellbeing': 'Wellbeing.xlsx',
+    'group & events travel': 'Group_&_Events_Travel.xlsx',
+    // More specific variations
+    'air travel': 'Air_Travel.xlsx',
+    'ground transport': 'Ground_Transportation.xlsx',
+    'transportation': 'Ground_Transportation.xlsx',
+    'hotel': 'Hotel_Lodging.xlsx',
+    'lodging': 'Hotel_Lodging.xlsx',
+    'expenses': 'Expense_Management.xlsx',
+    'expense': 'Expense_Management.xlsx',
+    'risk': 'Risk_Management.xlsx',
+    'sustain': 'Sustainability.xlsx',
+    'tech': 'Technology.xlsx',
+    'digital': 'Technology.xlsx',
+    'comply': 'Compliance.xlsx',
+    'govern': 'Compliance.xlsx',
+    'group travel': 'Group_&_Events_Travel.xlsx',
+    'events': 'Group_&_Events_Travel.xlsx',
+    'meals': 'Meals_&_Entertainment.xlsx',
+    'entertainment': 'Meals_&_Entertainment.xlsx',
+    'overview': 'Overview_&_Guidelines.xlsx',
+    'guide': 'Overview_&_Guidelines.xlsx',
+    'arrange': 'Travel_Arrangements.xlsx',
+    'well': 'Wellbeing.xlsx',
+    'being': 'Wellbeing.xlsx'
+  };
+  
+  // Try exact title match first (most specific)
+  for (const [title, fileName] of Object.entries(titleToFileMap)) {
+    if (sectionTitle.includes(title)) {
+      // Verify this file exists in scoreFiles
+      if (scoreFiles.some(f => f.name === fileName)) {
+        return fileName;
+      }
+    }
+  }
+  
+  // Try matching by file name words to section title (more precise)
+  for (const scoreFile of scoreFiles) {
+    const fileNameWithoutExt = scoreFile.name.replace(/\.(xlsx|xls)$/i, '');
+    const fileNameWords = fileNameWithoutExt.toLowerCase().split(/[_\s&]+/);
+    
+    // Check if ALL significant words from the file name appear in the section title
+    const significantWords = fileNameWords.filter(word => word.length > 2);
+    if (significantWords.length > 0) {
+      const allWordsMatch = significantWords.every(word => sectionTitle.includes(word));
+      if (allWordsMatch) {
+        return scoreFile.name;
+      }
+    }
+  }
+  
+  // Try reverse matching - check if section title words appear in file names
+  const sectionWords = sectionTitle.split(/[_\s&]+/).filter(word => word.length > 2);
+  
+  for (const scoreFile of scoreFiles) {
+    const fileNameWithoutExt = scoreFile.name.replace(/\.(xlsx|xls)$/i, '').toLowerCase();
+    
+    // Check if ALL significant words from section title appear in file name
+    if (sectionWords.length > 0) {
+      const allWordsMatch = sectionWords.every(word => fileNameWithoutExt.includes(word));
+      if (allWordsMatch) {
+        return scoreFile.name;
+      }
+    }
+  }
+  
+  // Try partial matching with score file names (fallback)
+  for (const scoreFile of scoreFiles) {
+    const fileNameWithoutExt = scoreFile.name.replace(/\.(xlsx|xls)$/i, '');
+    const fileNameWords = fileNameWithoutExt.toLowerCase().split(/[_\s&]+/);
+    
+    // Check if any word from the file name appears in the section title
+    const hasWordMatch = fileNameWords.some(word => 
+      word.length > 2 && sectionTitle.includes(word)
+    );
+    
+    if (hasWordMatch) {
+      return scoreFile.name;
+    }
+  }
+  
+  // Special handling for sections that don't have direct file matches
+  // These sections should be preserved but not matched to any file
+  const nonFileSections = [
+    'introduction',
+    'methodology', 
+    'executive summary',
+    'technology and digital tools',
+    'compliance and governance',
+    'recommendations and next steps'
+  ];
+  
+  if (nonFileSections.some(nonFileSection => sectionTitle.includes(nonFileSection))) {
+    return null; // Return null to indicate no match, but section should be preserved
+  }
+  
+  return null;
+}
+
 // Computed property for the main heading text
 const mainHeadingText = computed(() => {
   if (files.value && files.value.uploadedFileName) {
@@ -242,55 +404,7 @@ const mainHeadingText = computed(() => {
   return 'Policy Assist';
 });
 
-// Debug: Log activeFile changes
-watch(activeFile, (newVal) => {
-  console.log('Active file changed:', newVal);
-  if (newVal && newVal.type === 'gap') {
-    console.log('Active file name:', newVal.file.name);
-    const fileNameWithoutExt = newVal.file.name.replace(/\.(xlsx|xls)$/i, '');
-    console.log('File name without extension:', fileNameWithoutExt);
-    console.log('Available JSON keys:', Object.keys(excelJsonData.value));
-    console.log('JSON data for active file:', excelJsonData.value[newVal.file.name]);
-    
-    // Try to find a matching JSON file
-    const fileName = newVal.file.name;
-    const jsonKeys = Object.keys(excelJsonData.value);
-    
-    // Check exact match first
-    if (excelJsonData.value[fileNameWithoutExt]) {
-      console.log('Found exact match for:', fileNameWithoutExt);
-      console.log('Exact match JSON data:', excelJsonData.value[fileNameWithoutExt]);
-    } else {
-      // Try improved matching logic
-      const matchingKey = jsonKeys.find(key => {
-        const keyLower = key.toLowerCase();
-        const fileNameLower = fileNameWithoutExt.toLowerCase();
-        
-        if (keyLower === fileNameLower) return true;
-        if (fileNameLower.startsWith(keyLower + '_') || fileNameLower === keyLower) return true;
-        if (keyLower.startsWith(fileNameLower + '_') || keyLower === fileNameLower) return true;
-        return false;
-      });
-      
-      if (matchingKey) {
-        console.log('Found matching JSON key:', matchingKey);
-        console.log('Matching JSON data:', excelJsonData.value[matchingKey]);
-      } else {
-        console.log('No matching JSON key found for file:', fileName);
-      }
-    }
-  }
-}, { immediate: true });
 
-// Debug: Log excelJsonData changes
-watch(excelJsonData, (newVal) => {
-  console.log('excelJsonData updated:', newVal);
-}, { deep: true });
-
-// Debug: Log activeFileJsonData changes
-watch(activeFileJsonData, (newVal) => {
-  console.log('activeFileJsonData computed value:', newVal);
-}, { immediate: true });
 
 // Only set files if initialUploadedFile is present and backend data is passed
 onBeforeMount(async () => {
@@ -305,27 +419,6 @@ onBeforeMount(async () => {
     // Use the JSON data from the ZIP response
     if (files.value.excelJsonData) {
       excelJsonData.value = files.value.excelJsonData;
-      console.log('Loaded JSON data from ZIP response:', excelJsonData.value);
-    }
-    
-    // Debug: Log Gap Summary JSON data
-    if (files.value.gapSummaryJsonData) {
-      console.log('Gap Summary JSON data found:', files.value.gapSummaryJsonData);
-    }
-    
-    // Debug: Log summary files
-    if (files.value.summaryFiles) {
-      console.log('Summary files found:', files.value.summaryFiles);
-      files.value.summaryFiles.forEach((file, index) => {
-        console.log(`Summary file ${index}:`, {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          blob: file.blob,
-          hasBlob: !!file.blob,
-          blobType: file.blob ? file.blob.type : 'no blob'
-        });
-      });
     }
     
     // Set default active category and file
@@ -351,11 +444,7 @@ onBeforeMount(async () => {
     const rootWidth = getComputedStyle(document.documentElement).getPropertyValue('--sub-tab-default-width');
     const bodyWidth = getComputedStyle(document.body).getPropertyValue('--sub-tab-default-width');
     
-    console.log('Root CSS variable:', rootWidth);
-    console.log('Body CSS variable:', bodyWidth);
-    
     const defaultWidth = parseInt(rootWidth) || parseInt(bodyWidth) || 200;
-    console.log('Final default width:', defaultWidth);
     subTabWidth.value = defaultWidth;
   });
 });
@@ -519,22 +608,30 @@ function scrollToFileSection(file) {
     const fileElement = gapSummaryViewer.querySelector(`[data-file-name="${file.name}"]`);
     if (fileElement) {
       fileElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Add highlight effect
-      fileElement.classList.add('highlighted');
-      setTimeout(() => {
-        fileElement.classList.remove('highlighted');
-      }, 2000);
-    } else {
-      console.warn(`No section found for file: ${file.name}`);
-      // Try to find by partial match
-      const fileNameWithoutExt = file.name.replace(/\.(xlsx|xls)$/i, '');
-      const partialMatch = gapSummaryViewer.querySelector(`[data-file-name*="${fileNameWithoutExt}"]`);
-      if (partialMatch) {
-        partialMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        partialMatch.classList.add('highlighted');
-        setTimeout(() => {
-          partialMatch.classList.remove('highlighted');
-        }, 2000);
+      return;
+    }
+    
+    // Try to find by partial match
+    const fileNameWithoutExt = file.name.replace(/\.(xlsx|xls)$/i, '');
+    const partialMatch = gapSummaryViewer.querySelector(`[data-file-name*="${fileNameWithoutExt}"]`);
+    if (partialMatch) {
+      partialMatch.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    
+    // Try to find by matching the section title to the file name
+    const sections = gapSummaryViewer.querySelectorAll('.summary-section');
+    for (const section of sections) {
+      const sectionTitle = section.querySelector('.section-title')?.textContent?.toLowerCase();
+      if (sectionTitle) {
+        const fileNameWords = fileNameWithoutExt.toLowerCase().split(/[_\s&]+/);
+        const hasWordMatch = fileNameWords.some(word => 
+          word.length > 2 && sectionTitle.includes(word)
+        );
+        if (hasWordMatch) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
       }
     }
   }
@@ -560,6 +657,8 @@ function scrollToFileSection(file) {
   overflow: hidden;
   background: #E8F0F9;
 }
+
+
 .top-bar {
   display: flex;
   align-items: center;
