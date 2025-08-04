@@ -279,54 +279,21 @@ const reorderedSummaryData = computed(() => {
 function findBestFileMatch(section, scoreFiles) {
   const sectionTitle = section.title.toLowerCase();
   
-  // First, try exact title-to-file mapping with more specific matches
-  const titleToFileMap = {
-    'air travel analysis': 'Air_Travel.xlsx',
-    'ground transportation': 'Ground_Transportation.xlsx',
-    'hotel accommodations': 'Hotel_Lodging.xlsx',
-    'expense management': 'Expense_Management.xlsx',
-    'risk management': 'Risk_Management.xlsx',
-    'sustainability': 'Sustainability.xlsx',
-    'technology and digital tools': 'Technology.xlsx',
-    'compliance and governance': 'Compliance.xlsx',
-    'group & event travel': 'Group_&_Event_Travel.xlsx',
-    'meals & entertainment': 'Meals_&_Entertainment.xlsx',
-    'overview & guidelines': 'Overview_&_Guidelines.xlsx',
-    'travel arrangements': 'Travel_Arrangements.xlsx',
-    'wellbeing': 'Wellbeing.xlsx',
-    'group & events travel': 'Group_&_Events_Travel.xlsx',
-    // More specific variations
-    'air travel': 'Air_Travel.xlsx',
-    'ground transport': 'Ground_Transportation.xlsx',
-    'transportation': 'Ground_Transportation.xlsx',
-    'hotel': 'Hotel_Lodging.xlsx',
-    'lodging': 'Hotel_Lodging.xlsx',
-    'expenses': 'Expense_Management.xlsx',
-    'expense': 'Expense_Management.xlsx',
-    'risk': 'Risk_Management.xlsx',
-    'sustain': 'Sustainability.xlsx',
-    'tech': 'Technology.xlsx',
-    'digital': 'Technology.xlsx',
-    'comply': 'Compliance.xlsx',
-    'govern': 'Compliance.xlsx',
-    'group travel': 'Group_&_Events_Travel.xlsx',
-    'events': 'Group_&_Events_Travel.xlsx',
-    'meals': 'Meals_&_Entertainment.xlsx',
-    'entertainment': 'Meals_&_Entertainment.xlsx',
-    'overview': 'Overview_&_Guidelines.xlsx',
-    'guide': 'Overview_&_Guidelines.xlsx',
-    'arrange': 'Travel_Arrangements.xlsx',
-    'well': 'Wellbeing.xlsx',
-    'being': 'Wellbeing.xlsx'
+  // Helper function to normalize text for comparison
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .replace(/[_\s]/g, '') // Remove underscores and whitespace
+      .replace(/\.[^.]*$/, ''); // Remove file extension (everything after last dot)
   };
   
-  // Try exact title match first (most specific)
-  for (const [title, fileName] of Object.entries(titleToFileMap)) {
-    if (sectionTitle.includes(title)) {
-      // Verify this file exists in scoreFiles
-      if (scoreFiles.some(f => f.name === fileName)) {
-        return fileName;
-      }
+  const normalizedSectionTitle = normalizeText(sectionTitle);
+  
+  // Try direct matching with normalized file names
+  for (const scoreFile of scoreFiles) {
+    const normalizedFileName = normalizeText(scoreFile.name);
+    if (normalizedSectionTitle === normalizedFileName) {
+      return scoreFile.name;
     }
   }
   
