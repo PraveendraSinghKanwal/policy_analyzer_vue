@@ -1,7 +1,8 @@
 <template>
   <div class="upload-single-btn">
     <button class="btn-upload-pdf" :disabled="props.loading" @click="triggerFileInput">
-      <img src="/pdf_upload.webp" alt="Upload" class="pdf-icon" />
+      <!-- <img src="/pdf_upload.webp" alt="Upload" class="pdf-icon" /> -->
+      <img src="/pdf_upload.jpg" alt="Upload" class="pdf-icon" />
     </button>
     <input 
       ref="fileInput" 

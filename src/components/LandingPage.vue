@@ -59,7 +59,8 @@
             />
             <div class="upload-btn">
               Upload Policy (PDF/DOCX)
-              <img src="/pdf_upload.webp" alt="Upload" class="upload-icon" />
+              <!-- <img src="/pdf_upload.webp" alt="Upload" class="upload-icon" /> -->
+              <img src="/pdf_upload.jpg" alt="Upload" class="upload-icon" />
             </div>
           </label>
           <div v-if="props.errorMessage" class="error-message-fixed">
